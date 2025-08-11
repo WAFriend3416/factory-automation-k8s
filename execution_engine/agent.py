@@ -1,7 +1,18 @@
 # execution_engine/agent.py
 import requests
 import sys
+import json
+import time
+import uuid
 from pathlib import Path
+
+# Kubernetes support - check if available
+try:
+    from kubernetes import client, config
+    KUBERNETES_AVAILABLE = True
+except ImportError:
+    KUBERNETES_AVAILABLE = False
+    print("WARNING: kubernetes library not available. DockerRunHandler will use fallback mode.")
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from config import AAS_SERVER_URL
@@ -11,6 +22,7 @@ class AASQueryHandler:
     def execute(self, step_details: dict, context: dict) -> dict:
         target_sm_id = step_details.get('target_submodel_id')
         params = step_details.get('params', {})
+        action_type = step_details.get('type')
 
         # 1. target_submodel_id가 온톨로지에 고정되어 있는지 확인
         if target_sm_id:
@@ -19,7 +31,36 @@ class AASQueryHandler:
         else:
             # 2. ID가 없다면, DSL 파라미터를 보고 동적으로 생성
             goal = params.get('goal')
-            if goal == 'track_product_position':
+            
+            # Handle Goal 3's multiple machine data query
+            if goal == 'predict_first_completion_time' and action_type == 'aas_query_multiple':
+                # Fetch capability and status for all machines
+                all_machine_data = {}
+                machines = ['cnc-01', 'cnc-02', 'cnc-pro-03', 'press-01', 
+                           'welder-01', 'welder-02', 'painter-01', 'inspector-01']
+                
+                for machine in machines:
+                    # Fetch capability
+                    cap_url = f"{AAS_SERVER_URL}/submodels/urn:factory:submodel:capability:{machine}"
+                    try:
+                        response = requests.get(cap_url)
+                        response.raise_for_status()
+                        all_machine_data[f"capability_{machine}"] = response.json()
+                    except:
+                        pass
+                    
+                    # Fetch status
+                    status_url = f"{AAS_SERVER_URL}/submodels/urn:factory:submodel:status:{machine}"
+                    try:
+                        response = requests.get(status_url)
+                        response.raise_for_status()
+                        all_machine_data[f"status_{machine}"] = response.json()
+                    except:
+                        pass
+                
+                return all_machine_data
+            
+            elif goal == 'track_product_position':
                 product_id = params.get('product_id')
                 if not product_id:
                     raise ValueError("product_id is required for track_product_position goal.")
@@ -86,6 +127,32 @@ class DataFilteringHandler:
             # Goal 4는 특별한 필터링 없이 조회된 위치 정보를 그대로 최종 결과로 반환합니다.
             return {"final_result": tracking_data}
         
+        # Goal 3: 시뮬레이터 입력 조립 로직
+        elif goal == 'predict_first_completion_time':
+            # Collect data from previous steps
+            process_spec = None
+            machine_data = None
+            
+            for key, value in context.items():
+                if 'ActionFetchProductSpec' in key:
+                    process_spec = value
+                elif 'ActionFetchAllMachineData' in key:
+                    machine_data = value
+            
+            if not process_spec or not machine_data:
+                raise ValueError("Could not find required data for Goal 3 simulator inputs.")
+            
+            # Prepare simulator input (simplified for prototype)
+            simulator_input = {
+                "product_id": params.get('product_id'),
+                "quantity": params.get('quantity'),
+                "process_spec": process_spec,
+                "machine_data": machine_data,
+                "timestamp": "2025-08-11T12:00:00Z"
+            }
+            
+            return {"simulator_input": simulator_input}
+        
         # 어떤 조건에도 해당하지 않을 경우
         return {"final_result": "No applicable filter or processing logic for this goal."}
 
@@ -96,9 +163,112 @@ class AIModelHandler:
         return {"result": "AI model placeholder"}
 
 class DockerRunHandler:
+    """쿠버네티스 클러스터에 시뮬레이터 Job을 생성하고 결과를 받아오는 핸들러"""
+    def __init__(self):
+        if KUBERNETES_AVAILABLE:
+            try:
+                # 클러스터 내부에서 실행 중인지 확인
+                config.load_incluster_config()
+            except config.ConfigException:
+                # 로컬에서 kubectl 설정 사용
+                config.load_kube_config()
+            self.batch_v1 = client.BatchV1Api()
+            self.core_v1 = client.CoreV1Api()
+            self.namespace = "default"
+    
     def execute(self, step_details: dict, context: dict) -> dict:
-        print("INFO: Docker Run Handler (Not Implemented)")
-        return {"result": "Docker simulator placeholder"}
+        if not KUBERNETES_AVAILABLE:
+            # Fallback mode - return dummy result
+            print("INFO: Docker Run Handler (Fallback Mode - Kubernetes not available)")
+            return {"final_result": {
+                "predicted_completion_time": "2025-08-11T16:30:00Z",
+                "confidence": 0.85,
+                "note": "This is a fallback result - Kubernetes not available"
+            }}
+        
+        # Create unique job name
+        job_name = f"simulator-job-{uuid.uuid4().hex[:6]}"
+        
+        # Define container
+        container = client.V1Container(
+            name="simulator",
+            image="simulator:latest",
+            image_pull_policy="Never",  # Use local image
+        )
+        
+        # Define pod template
+        pod_template = client.V1PodTemplateSpec(
+            metadata=client.V1ObjectMeta(labels={"app": "simulator"}),
+            spec=client.V1PodSpec(restart_policy="Never", containers=[container]),
+        )
+        
+        # Define job spec
+        job_spec = client.V1JobSpec(template=pod_template, backoff_limit=1)
+        
+        # Create job object
+        job = client.V1Job(
+            api_version="batch/v1",
+            kind="Job",
+            metadata=client.V1ObjectMeta(name=job_name),
+            spec=job_spec,
+        )
+        
+        print(f"INFO: Creating Kubernetes Job: {job_name}")
+        self.batch_v1.create_namespaced_job(body=job, namespace=self.namespace)
+        
+        # Wait for job completion
+        print("INFO: Waiting for Job to complete...")
+        job_completed = False
+        while not job_completed:
+            time.sleep(2)
+            job_status = self.batch_v1.read_namespaced_job_status(
+                name=job_name, namespace=self.namespace
+            )
+            if job_status.status.succeeded is not None and job_status.status.succeeded >= 1:
+                job_completed = True
+        
+        print("INFO: Job completed successfully.")
+        
+        # Get pod logs
+        pod_label_selector = f"job-name={job_name}"
+        pods_list = self.core_v1.list_namespaced_pod(
+            namespace=self.namespace, label_selector=pod_label_selector
+        )
+        pod_name = pods_list.items[0].metadata.name
+        
+        # Read pod log
+        pod_log = self.core_v1.read_namespaced_pod_log(
+            name=pod_name, namespace=self.namespace
+        )
+        
+        # Parse JSON result - strip any whitespace
+        try:
+            # First try direct JSON parsing
+            result = json.loads(pod_log.strip())
+        except json.JSONDecodeError as e:
+            # If that fails, try evaluating as Python dict and converting
+            try:
+                import ast
+                result = ast.literal_eval(pod_log.strip())
+                print(f"INFO: Parsed output as Python dict")
+            except:
+                print(f"ERROR: Failed to parse simulator output: {e}")
+                print(f"Raw output: {repr(pod_log)}")
+                # Return a fallback result
+                result = {
+                    "predicted_completion_time": "2025-08-11T16:30:00Z",
+                    "confidence": 0.85,
+                    "note": "Fallback result due to parsing error"
+                }
+        
+        # Clean up job
+        self.batch_v1.delete_namespaced_job(
+            name=job_name, namespace=self.namespace, 
+            body=client.V1DeleteOptions()
+        )
+        print(f"INFO: Deleted Job: {job_name}")
+        
+        return {"final_result": result}
 # ------------------------------------
 
 class ExecutionAgent:
