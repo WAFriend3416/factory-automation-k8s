@@ -13,6 +13,10 @@ spec:
         app: api-server
     spec:
       serviceAccountName: api-service-account
+      volumes:
+        - name: shared-data-volume
+          persistentVolumeClaim:
+            claimName: factory-shared-pvc
       containers:
       - name: api-server
         image: factory-api:latest
@@ -22,6 +26,9 @@ spec:
         env:
         - name: AAS_SERVER_URL
           value: "http://aas-mock-service:5001"
+        volumeMounts:
+          - name: shared-data-volume
+            mountPath: /data # 컨테이너 내부의 /data 폴더에 연결
 ---
 apiVersion: v1
 kind: Service

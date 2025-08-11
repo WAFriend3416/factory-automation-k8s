@@ -27,9 +27,20 @@ except FileNotFoundError:
 def get_submodel_by_id(submodel_id: str):
     """
     URL 경로로 받은 URN ID를 사용하여 Submodel을 찾습니다.
-    예: /submodels/urn:factory:submodel:job_log (실제로는 URL 인코딩되어 전달됨)
+    ID는 base64url 인코딩되어 전달될 수 있습니다.
     """
-    # URL 인코딩된 URN을 디코딩할 필요는 Flask가 자동으로 처리해 줍니다.
+    # Try to decode from base64url if it looks like base64
+    import base64
+    try:
+        # Attempt to decode base64url
+        padding = 4 - (len(submodel_id) % 4) if len(submodel_id) % 4 else 0
+        decoded_id = base64.urlsafe_b64decode(submodel_id + '=' * padding).decode('utf-8')
+        if decoded_id.startswith('urn:'):
+            submodel_id = decoded_id
+    except:
+        # If decoding fails, use the original ID
+        pass
+    
     if submodel_id in submodels_by_id:
         return jsonify(submodels_by_id[submodel_id])
     
