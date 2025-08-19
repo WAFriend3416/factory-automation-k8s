@@ -163,14 +163,36 @@ class DataFilteringHandler:
         # Goal 4: 제품 위치 추적 로직
         elif goal == 'track_product_position':
             tracking_data = None
+            print(f"DEBUG: Processing Goal 4, context keys: {list(context.keys())}")
+            
             for key, value in context.items():
                 if 'ActionFetchTrackingData' in key:
-                    tracking_data = self._parse_value(value)
+                    print(f"DEBUG: Found tracking data in {key}")
+                    print(f"DEBUG: Value type: {type(value)}, has submodelElements: {'submodelElements' in value if isinstance(value, dict) else False}")
+                    
+                    # 표준 서버의 경우 직접 사용, Mock의 경우 파싱
+                    if isinstance(value, dict) and 'submodelElements' in value:
+                        # 표준 서버 형식 - submodelElements에서 데이터 추출
+                        elements = value.get('submodelElements', [])
+                        tracking_info = {}
+                        for element in elements:
+                            id_short = element.get('idShort')
+                            elem_value = element.get('value')
+                            if id_short and elem_value:
+                                tracking_info[id_short] = elem_value
+                        tracking_data = tracking_info
+                        print(f"DEBUG: Extracted tracking_info from standard format: {tracking_info}")
+                    else:
+                        # Mock 서버 형식 - _parse_value 사용
+                        tracking_data = self._parse_value(value)
+                        print(f"DEBUG: Parsed value from mock format: {tracking_data}")
                     break
             
             if tracking_data is None:
+                print(f"ERROR: No tracking data found in context: {context}")
                 raise ValueError("Could not find tracking data from previous step for Goal 4.")
             
+            print(f"DEBUG: Returning final_result: {tracking_data}")
             return {"final_result": tracking_data}
         
         # 어떤 조건에도 해당하지 않을 경우

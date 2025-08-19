@@ -7,7 +7,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from api.schemas import DslRequest, ApiResponse
 from execution_engine.planner import ExecutionPlanner
-from execution_engine.agent import ExecutionAgent
+from execution_engine.agent_refactored import ExecutionAgent
 import requests
 
 app = FastAPI(

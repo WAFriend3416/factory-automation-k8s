@@ -39,20 +39,37 @@ def test_goal4():
         # 결과 검증
         if result.get("result"):
             tracking_info = result["result"]
-            expected_location = "Painter-01"
-            expected_process = "painting"
-            expected_progress = 65
             
-            if (tracking_info.get("current_location") == expected_location and
-                tracking_info.get("current_process") == expected_process and
-                tracking_info.get("progress_percentage") == expected_progress):
-                print("\n✅ Test PASSED: Product-C is at expected location")
-                print(f"   📍 Location: {expected_location}")
-                print(f"   ⚙️  Process: {expected_process}")
-                print(f"   📈 Progress: {expected_progress}%")
-                return True
+            # 표준 서버 형식 처리 (CamelCase 키)
+            if isinstance(tracking_info, dict):
+                # Mock 서버와 표준 서버 모두 지원
+                location = tracking_info.get("current_location") or tracking_info.get("CurrentLocation")
+                process = tracking_info.get("current_process") or tracking_info.get("CurrentProcess")
+                progress = tracking_info.get("progress_percentage") or tracking_info.get("ProgressPercentage")
+                
+                # progress가 문자열일 수 있으므로 int로 변환
+                if isinstance(progress, str):
+                    progress = int(progress)
+                
+                expected_location = "Painter-01"
+                expected_process = "painting"
+                expected_progress = 65
+                
+                if (location == expected_location and
+                    process == expected_process and
+                    progress == expected_progress):
+                    print("\n✅ Test PASSED: Product-C is at expected location")
+                    print(f"   📍 Location: {location}")
+                    print(f"   ⚙️  Process: {process}")
+                    print(f"   📈 Progress: {progress}%")
+                    return True
+                else:
+                    print("\n❌ Test FAILED: Unexpected tracking data")
+                    print(f"   Expected: Location={expected_location}, Process={expected_process}, Progress={expected_progress}")
+                    print(f"   Got: Location={location}, Process={process}, Progress={progress}")
+                    return False
             else:
-                print("\n❌ Test FAILED: Unexpected tracking data")
+                print(f"\n❌ Test FAILED: Unexpected result format: {type(tracking_info)}")
                 return False
         else:
             print("\n❌ Test FAILED: No result in response")
