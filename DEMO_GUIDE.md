@@ -3,20 +3,26 @@
 ## 📌 시스템 개요
 
 **Industry 4.0 기반 지능형 스마트 팩토리 자동화 시스템**
-- **AAS v2 표준** 기반 디지털 트윈 구현
-- **온톨로지 기반** 지능형 의사결정 엔진
+- **AAS v3.0 표준** 기반 디지털 트윈 구현
+- **듀얼 모드 지원**: Mock 서버 & 표준 AAS 서버 선택 가능 ✨
+- **온톨로지 기반** 지능형 의사결정 엔진  
 - **Kubernetes 네이티브** 마이크로서비스 아키텍처
 - **실시간** 생산 모니터링 및 추적
+- **AASX 표준 패키지** 자동 생성 및 배포
 
 ---
 
 ## 🎯 시연 목표
 
 본 시연은 다음을 보여줍니다:
-1. **Goal 1**: 특정 날짜의 냉각 공정 실패 작업 조회
-2. **Goal 3**: 생산 시간 예측 (동적 시뮬레이터 Job 생성) ✨ NEW
-3. **Goal 4**: 실시간 제품 위치 추적
-4. **기술적 혁신**: 온톨로지-AAS 통합, Kubernetes 오케스트레이션, PVC 기반 데이터 공유
+1. **Goal 1**: 특정 날짜의 냉각 공정 실패 작업 조회 ✅
+2. **Goal 3**: 생산 시간 예측 (동적 시뮬레이터 Job 생성) ✅
+3. **Goal 4**: 실시간 제품 위치 추적 (표준 AAS 서버 연동) ✅ NEW
+4. **기술적 혁신**: 
+   - 온톨로지-AAS 통합
+   - Mock/Standard 서버 듀얼 모드
+   - Kubernetes 오케스트레이션
+   - PVC 기반 데이터 공유
 
 ---
 
@@ -59,8 +65,10 @@
 |---------|----------|------|
 | **API Server** | FastAPI, Pydantic | DSL 요청 처리, 워크플로우 관리 |
 | **Ontology Engine** | RDFLib, SPARQL | Goal → Action 변환 |
-| **AAS Mock Server** | Flask, JSON, Base64URL | Industry 4.0 표준 데이터 제공 |
-| **Execution Agent** | Python, Kubernetes API | Action 실행 및 오케스트레이션 |
+| **AAS Mock Server** | Flask, JSON, Base64URL | Industry 4.0 표준 데이터 제공 (개발/테스트용) |
+| **표준 AAS Server** | AASX Server 2023 | Production 환경 표준 서버 (선택적) |
+| **AAS Query Client** | Python, HTTP | 표준 서버 통신 인터페이스 |
+| **Execution Agent** | Python, Kubernetes API | Action 실행 및 듀얼 모드 처리 |
 | **Simulator Job** | Python, K8s Job | 동적 생산 시간 예측 |
 | **PVC Storage** | PersistentVolumeClaim | Pod 간 데이터 공유 |
 
@@ -92,10 +100,19 @@ python3 --version
 ### Step 1: 코드 준비 (1분)
 ```bash
 # 프로젝트 디렉토리로 이동
-cd /Users/jeongseunghwan/Desktop/aas-project/gemini-ver/factory-automation-k8s
+cd /Users/jeongseunghwan/Desktop/aas-project/gemini-ver/factory-automation-k8s-copy
 
 # 디렉토리 구조 확인
 ls -la
+
+# 서버 모드 선택 (환경변수 설정)
+# Mock 서버 사용 (기본값)
+export USE_STANDARD_SERVER=false
+
+# 또는 표준 서버 사용
+# export USE_STANDARD_SERVER=true
+# export AAS_SERVER_IP=YOUR_SERVER_ADDRESS  # 또는 로컬 표준 서버 IP
+# export AAS_SERVER_PORT=PORT
 ```
 
 ### Step 2: Docker 이미지 빌드 (3분)
@@ -153,7 +170,62 @@ kubectl port-forward service/api-service 8080:80 &
 # 연결 확인 (3초 대기 후)
 sleep 3
 curl http://127.0.0.1:8080/docs
+
+# 현재 서버 모드 확인
+echo "Current Server Mode: ${USE_STANDARD_SERVER:-false}"
 ```
+
+---
+
+## 🔄 표준 AAS 서버 연동 (선택사항) ✨ NEW
+
+### 표준 서버 모드 활성화
+```bash
+# 표준 서버 사용 설정
+export USE_STANDARD_SERVER=true
+export AAS_SERVER_IP=YOUR_SERVER_ADDRESS  # 외부 표준 서버
+export AAS_SERVER_PORT=PORT
+
+# 또는 로컬 표준 서버 사용
+# export AAS_SERVER_IP=127.0.0.1
+# export AAS_SERVER_PORT=51310  # 표준 서버 기본 포트
+```
+
+### AASX 패키지 생성 및 업로드
+```bash
+# JSON 데이터를 표준 AASX 패키지로 변환
+python converter_v2.py
+
+# 생성된 AASX 파일 확인
+ls -la dist/factory_aas_v2.aasx
+
+# 표준 서버에 업로드 (수동 또는 API 사용)
+# 브라우저: http://${AAS_SERVER_IP}:${AAS_SERVER_PORT}
+```
+
+### 표준 서버 데이터 조회 테스트
+```bash
+# AAS Query Client로 데이터 확인
+python -c "
+from aas_query_client import AASQueryClient
+import os
+
+ip = os.getenv('AAS_SERVER_IP', '127.0.0.1')
+port = int(os.getenv('AAS_SERVER_PORT', '51310'))
+
+client = AASQueryClient(ip, port)
+print('Fetching all submodels...')
+submodels = client.get_all_submodels()
+if submodels:
+    print(f'Found {len(submodels)} submodels')
+"
+```
+
+### 듀얼 모드 아키텍처 특징
+- **자동 서버 감지**: 환경변수 기반 서버 선택
+- **호환성 유지**: 동일한 API 인터페이스로 Mock/Standard 모두 지원
+- **Base64URL 인코딩**: 양쪽 서버 모두 동일한 ID 인코딩 사용
+- **Fallback 메커니즘**: 표준 서버 실패 시 Mock 서버로 자동 전환 가능
 
 ---
 
@@ -280,7 +352,27 @@ kubectl logs simulator-job-xxxxx
 
 **비즈니스 케이스**: 생산 관리자가 특정 제품의 현재 위치와 진행 상태를 실시간으로 확인
 
-#### 2.1 Product-C 추적
+#### 3.1 표준 서버 모드로 실행 (NEW)
+```bash
+# 표준 서버 모드 활성화
+export USE_STANDARD_SERVER=true
+export AAS_SERVER_IP=YOUR_SERVER_ADDRESS
+export AAS_SERVER_PORT=PORT
+
+# API 서버 재시작하여 설정 적용
+kubectl rollout restart deployment api-deployment
+kubectl rollout status deployment api-deployment
+
+# 표준 서버를 통한 제품 추적
+curl -X POST "http://127.0.0.1:8080/execute-goal" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "goal": "track_product_position",
+    "product_id": "Product-C"
+  }' | python3 -m json.tool
+```
+
+#### 3.2 Mock 서버 모드로 실행 (기본값)
 ```bash
 curl -X POST "http://127.0.0.1:8080/execute-goal" \
   -H "Content-Type: application/json" \
@@ -306,7 +398,7 @@ curl -X POST "http://127.0.0.1:8080/execute-goal" \
 }
 ```
 
-#### 2.2 Product-D 추적
+#### 3.3 Product-D 추적
 ```bash
 curl -X POST "http://127.0.0.1:8080/execute-goal" \
   -H "Content-Type: application/json" \
@@ -332,7 +424,7 @@ curl -X POST "http://127.0.0.1:8080/execute-goal" \
 }
 ```
 
-#### 2.3 기술적 특징
+#### 3.4 기술적 특징
 - **동적 Submodel ID 생성**: product_id를 기반으로 URN 자동 생성
 - **실시간 데이터**: AAS 표준을 통한 실시간 상태 조회
 - **확장 가능**: 수천 개 제품 동시 추적 가능
@@ -384,10 +476,13 @@ kubectl get endpoints
 
 ### 4. **확장 가능한 설계**
 ```yaml
-향후 확장 가능:
-  Goal 2: AI 기반 이상 탐지
-  Goal 3: 생산 시간 예측 (시뮬레이터 통합)
-  Goal 5+: 사용자 정의 Goal 추가
+완료된 기능:
+  Goal 1: 실패한 냉각 작업 조회 ✅
+  Goal 3: 생산 시간 예측 (시뮬레이터 통합) ✅ 
+  Goal 4: 제품 위치 추적 (표준 서버 연동) ✅
+
+진행 중:
+  Goal 2: AI 기반 이상 탐지 (ML 모델 통합 대기)  
 ```
 
 ---
@@ -437,13 +532,26 @@ kubectl rollout restart deployment api-deployment
 
 ## 🎯 시연 체크리스트
 
+### 기본 설정
 - [ ] Docker Desktop Kubernetes 활성화 확인
 - [ ] 모든 Docker 이미지 빌드 완료
 - [ ] Kubernetes 리소스 배포 완료
 - [ ] 포트 포워딩 설정 완료
+
+### Mock 서버 모드
 - [ ] Goal 1 테스트 성공
+- [ ] Goal 3 테스트 성공 
 - [ ] Goal 4 테스트 성공
+
+### 표준 서버 모드 (선택)
+- [ ] AASX 패키지 생성 확인
+- [ ] 표준 서버 연결 테스트
+- [ ] Goal 4 표준 서버 모드 테스트
+- [ ] 듀얼 모드 전환 테스트
+
+### 모니터링
 - [ ] 로그 모니터링 준비
+- [ ] 서버 모드 전환 확인
 
 ---
 
@@ -473,3 +581,20 @@ docker image prune -a
 **준비 시간**: 약 5분
 
 > 💡 **Tip**: 시연 전 모든 명령어를 한 번씩 실행하여 시스템이 정상 작동하는지 확인하세요.
+
+---
+
+## 📅 업데이트 이력
+
+| 날짜 | 버전 | 주요 변경사항 |
+|------|------|--------------|
+| 2025-08-11 | v1.0 | 초기 버전 - Goal 1, 3, 4 구현 |
+| 2025-08-14 | v1.1 | AASX 변환기 추가, 표준 서버 마이그레이션 준비 |
+| 2025-08-19 | v1.2 | 표준 서버 연동 성공, 듀얼 모드 지원 |
+| 2025-08-21 | v2.0 | **표준 서버 통합 완료**, 듀얼 모드 문서화 |
+
+---
+
+**작성자**: Development Team  
+**최종 수정**: 2025-08-21  
+**문서 버전**: 2.0
