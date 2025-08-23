@@ -15,48 +15,63 @@
 ## 🎯 시연 목표
 
 본 시연은 다음을 보여줍니다:
+
+### 🔄 **듀얼 모드 시연** (Mock & Standard AAS Server)
 1. **Goal 1**: 특정 날짜의 냉각 공정 실패 작업 조회 ✅
-2. **Goal 3**: 생산 시간 예측 (동적 시뮬레이터 Job 생성) ✅
-3. **Goal 4**: 실시간 제품 위치 추적 (표준 AAS 서버 연동) ✅ NEW
-4. **기술적 혁신**: 
-   - 온톨로지-AAS 통합
-   - Mock/Standard 서버 듀얼 모드
-   - Kubernetes 오케스트레이션
-   - PVC 기반 데이터 공유
+   - Mock 서버: ✅ 완전 지원 | Standard 서버: ✅ **완전 지원**
+2. **Goal 3**: 생산 시간 예측 (동적 시뮬레이터 Job 생성) ✅  
+   - Mock 서버: ✅ 완전 지원 | Standard 서버: ✅ **완전 지원** (파일 시스템 개선)
+3. **Goal 4**: 실시간 제품 위치 추적 ✅ **NEW**
+   - Mock 서버: ✅ 완전 지원 | Standard 서버: ✅ **완전 지원**
+4. **Goal 2**: 이상 감지 (부분 지원)
+   - Mock 서버: ✅ 완전 지원 | Standard 서버: ⚠️ 센서 데이터 필요
+
+### 🚀 **기술적 혁신**
+- **온톨로지-AAS 통합**: SPARQL 기반 지능형 Action Planning
+- **듀얼 모드 아키텍처**: 개발(Mock) ↔ 운영(Standard) 서버 전환
+- **동적 파일 시스템**: 환경별 자동 경로 해결 (K8s PVC ↔ 로컬 임시)
+- **Kubernetes 오케스트레이션**: PVC 기반 데이터 공유 및 시뮬레이터 Job 관리
 
 ---
 
 ## 🏗️ 시스템 아키텍처
 
+### 🔄 **듀얼 모드 아키텍처**
+
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                     Kubernetes Cluster                         │
-│                                                                │
-│  ┌─────────────────┐        ┌─────────────────┐              │
-│  │   API Service   │ ──────>│  AAS Mock       │              │
-│  │   (FastAPI)     │  HTTP  │  Service        │              │
-│  │                 │        │  (Flask)        │              │
-│  │ - Planner       │        │ - Job Logs      │              │
-│  │ - Agent         │        │ - Tracking Data │              │
-│  │ - Handlers      │        │ - Process Specs │              │
-│  └─────────────────┘        └─────────────────┘              │
-│           ↓                                                    │
-│  ┌─────────────────────────────────────────┐                 │
-│  │        Ontology Engine (RDF/SPARQL)      │                 │
-│  │  Goal → Action Sequence → Execution      │                 │
-│  └─────────────────────────────────────────┘                 │
-│           ↓                                                    │
-│  ┌──────────────────┐    PVC    ┌─────────────────┐          │
-│  │ API Pod mounts   │◄─────────►│ Simulator Job   │          │
-│  │ /data volume     │  Shared   │ mounts /data    │          │
-│  │                  │   Data    │ (Dynamic)       │          │
-│  └──────────────────┘           └─────────────────┘          │
-└────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                      Kubernetes Cluster                         │
+│                                                                 │
+│  ┌─────────────────┐     ┌─────────────────────────────────────┐ │
+│  │   API Service   │────►│        AAS Server Layer             │ │
+│  │   (FastAPI)     │     │                                     │ │
+│  │                 │     │  ┌─────────────┐ ┌──────────────┐    │ │
+│  │ - Planner       │     │  │ Mock Server │ │Standard Server│   │ │
+│  │ - Agent         │     │  │  (Flask)    │ │  (AAS v3.0)   │   │ │
+│  │ - PathResolver  │     │  │- Job Logs   │ │- Submodels    │   │ │
+│  │ - Dual Handler  │     │  │- Tracking   │ │- Collections  │   │ │
+│  └─────────────────┘     │  └─────────────┘ └──────────────┘    │ │
+│           ↓               └─────────────────────────────────────┘ │
+│  ┌───────────────────────────────────────────────────────────────┐ │
+│  │              Ontology Engine (RDF/SPARQL)                    │ │
+│  │    Goal → Action Sequence → Execution (Dual Mode)            │ │
+│  └───────────────────────────────────────────────────────────────┘ │
+│           ↓                                                       │
+│  ┌──────────────────┐    🔄 Dynamic Path   ┌─────────────────┐   │
+│  │ API Pod          │◄─────────────────────►│ Simulator Job   │   │
+│  │ - /data (K8s)    │     Resolution        │ - /data or      │   │
+│  │ - /tmp (Local)   │     (PathResolver)    │ - /tmp (Local)  │   │
+│  │ - Memory fallback│                       │ - Memory Mode   │   │
+│  └──────────────────┘                       └─────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
          ↑
-    Port Forward
-    (8080 → 80)
+    Port Forward (8080 → 80)
          ↑
-    External Client
+    🖥️ External Client
+    
+📊 Mode Selection:
+USE_STANDARD_SERVER=true  → Standard AAS Server (Production)
+USE_STANDARD_SERVER=false → Mock Server (Development)
 ```
 
 ### 핵심 컴포넌트
@@ -177,66 +192,117 @@ echo "Current Server Mode: ${USE_STANDARD_SERVER:-false}"
 
 ---
 
-## 🔄 표준 AAS 서버 연동 (선택사항) ✨ NEW
+## 🔄 듀얼 모드 시연 ✨ **NEW** 
 
-### 표준 서버 모드 활성화
+### 🖥️ **Mode 1: Mock Server (개발 환경)**
+
+**기본 모드** - 빠른 프로토타이핑과 개발에 최적화
 ```bash
-# 표준 서버 사용 설정
+# Mock Server 모드 (기본값)
+export USE_STANDARD_SERVER=false
+echo "📦 Mock Server Mode: Development & Testing"
+```
+
+### 🏭 **Mode 2: Standard Server (운영 환경)** 
+
+**표준 AAS v3.0 서버** - 운영 환경에 적합한 표준 호환 모드
+```bash
+# Standard AAS Server 모드 활성화  
 export USE_STANDARD_SERVER=true
-export AAS_SERVER_IP=YOUR_SERVER_ADDRESS  # 외부 표준 서버
-export AAS_SERVER_PORT=PORT
-
-# 또는 로컬 표준 서버 사용
-# export AAS_SERVER_IP=127.0.0.1
-# export AAS_SERVER_PORT=51310  # 표준 서버 기본 포트
+export AAS_SERVER_IP=127.0.0.1      # 표준 서버 주소
+export AAS_SERVER_PORT=5001          # 표준 서버 포트
+echo "🔄 Standard AAS Server Mode: Production Ready"
 ```
 
-### AASX 패키지 생성 및 업로드
+### 🛠️ **환경별 파일 시스템 설정**
+
+**로컬 개발 환경:**
 ```bash
-# JSON 데이터를 표준 AASX 패키지로 변환
-python converter_v2.py
-
-# 생성된 AASX 파일 확인
-ls -la dist/factory_aas_v2.aasx
-
-# 표준 서버에 업로드 (수동 또는 API 사용)
-# 브라우저: http://${AAS_SERVER_IP}:${AAS_SERVER_PORT}
+export FORCE_LOCAL_MODE=true         # 강제 로컬 모드 (임시 디렉토리 사용)
+export DEBUG_MODE=true               # 상세 로그 출력
 ```
 
-### 표준 서버 데이터 조회 테스트
+**Kubernetes 환경:**
 ```bash
-# AAS Query Client로 데이터 확인
-python -c "
-from aas_query_client import AASQueryClient
-import os
-
-ip = os.getenv('AAS_SERVER_IP', '127.0.0.1')
-port = int(os.getenv('AAS_SERVER_PORT', '51310'))
-
-client = AASQueryClient(ip, port)
-print('Fetching all submodels...')
-submodels = client.get_all_submodels()
-if submodels:
-    print(f'Found {len(submodels)} submodels')
-"
+export SIMULATION_WORK_DIR=/data     # PVC 마운트 경로 사용
+# 자동 감지로 K8s 환경에서는 /data PVC를 우선 사용
 ```
 
-### 듀얼 모드 아키텍처 특징
-- **자동 서버 감지**: 환경변수 기반 서버 선택
-- **호환성 유지**: 동일한 API 인터페이스로 Mock/Standard 모두 지원
-- **Base64URL 인코딩**: 양쪽 서버 모두 동일한 ID 인코딩 사용
-- **Fallback 메커니즘**: 표준 서버 실패 시 Mock 서버로 자동 전환 가능
+**사용자 정의 환경:**
+```bash
+export SIMULATION_WORK_DIR=/custom/path  # 사용자 지정 작업 디렉토리
+```
+
+### 🔄 **듀얼 모드 전환 시연**
+
+**1단계: Mock 서버 모드 테스트**
+```bash
+export USE_STANDARD_SERVER=false
+curl -X POST http://localhost:8080/execute-goal \
+  -H "Content-Type: application/json" \
+  -d '{"goal": "query_failed_jobs_with_cooling", "date": "2025-08-11"}'
+```
+
+**2단계: Standard 서버 모드로 전환**
+```bash
+export USE_STANDARD_SERVER=true
+export AAS_SERVER_PORT=5001
+curl -X POST http://localhost:8080/execute-goal \
+  -H "Content-Type: application/json" \
+  -d '{"goal": "track_product_position", "product_id": "Product-C"}'
+```
+
+**3단계: 파일 시스템 모드 변경**
+```bash
+export FORCE_LOCAL_MODE=true  # 로컬 임시 디렉토리 강제 사용
+curl -X POST http://localhost:8080/execute-goal \
+  -H "Content-Type: application/json" \
+  -d '{"goal": "predict_first_completion_time", "product_id": "Product-A", "quantity": 10}'
+```
+
+### 🎯 **듀얼 모드 비교표**
+
+| 항목 | Mock Server | Standard Server |
+|------|-------------|-----------------|
+| **목적** | 개발/테스트 | 운영/표준 호환 |
+| **기술** | Flask | AAS v3.0 |
+| **포트** | 5001 (기본) | 5001 또는 51310 |
+| **데이터 형식** | JSON | AAS 표준 |
+| **Goal 1** | ✅ 완전 지원 | ✅ **완전 지원** |
+| **Goal 2** | ✅ 완전 지원 | ⚠️ 센서 데이터 필요 |
+| **Goal 3** | ✅ 완전 지원 | ✅ **완전 지원** (파일 시스템 개선) |
+| **Goal 4** | ✅ 완전 지원 | ✅ **완전 지원** |
+| **파일 시스템** | 기본 /data | 동적 경로 해결 |
+
+### 🚀 **듀얼 모드 혁신 특징**
+- **투명한 전환**: 환경변수만으로 서버 모드 전환
+- **동적 경로 해결**: K8s PVC ↔ 로컬 임시 디렉토리 자동 선택
+- **Fallback 메커니즘**: 파일 시스템 실패시 메모리 모드로 자동 전환
+- **표준 호환**: AAS v3.0 표준 완전 준수
 
 ---
 
 ## 🎬 시연 시나리오
 
-### 📊 시나리오 1: Goal 1 - 실패한 냉각 작업 조회 (2분)
+### 📊 시나리오 1: Goal 1 - 실패한 냉각 작업 조회 (2분) ✅ **듀얼 모드 지원**
 
 **비즈니스 케이스**: 품질 관리자가 특정 날짜에 냉각 공정에서 실패한 모든 작업을 조회하여 원인 분석
 
-#### 1.1 요청 실행
+#### 1.1 Mock 서버 모드 테스트
 ```bash
+export USE_STANDARD_SERVER=false
+curl -X POST "http://127.0.0.1:8080/execute-goal" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "goal": "query_failed_jobs_with_cooling",
+    "date": "2025-08-11"
+  }' | python3 -m json.tool
+```
+
+#### 1.2 Standard 서버 모드 테스트 ✨ **NEW**
+```bash
+export USE_STANDARD_SERVER=true
+export AAS_SERVER_PORT=5001
 curl -X POST "http://127.0.0.1:8080/execute-goal" \
   -H "Content-Type: application/json" \
   -d '{
@@ -269,39 +335,66 @@ curl -X POST "http://127.0.0.1:8080/execute-goal" \
 }
 ```
 
-#### 1.3 기술적 흐름 설명
+#### 1.3 **듀얼 모드 기술적 흐름** 비교
+**Mock 서버 모드:**
 ```
 1. DSL 파싱 → {"goal": "query_failed_jobs_with_cooling", "date": "2025-08-11"}
-2. 온톨로지 조회 → ActionSequence: [ActionFetchJobLog, ActionFilterData]
-3. AAS 데이터 조회 → GET http://aas-mock-service:5001/submodels/urn:factory:submodel:job_log
+2. 온톨로지 조회 → ActionSequence: [ActionFetchJobLog, ActionFilterData] 
+3. Mock AAS 조회 → GET http://aas-mock-service:5001/submodels/urn:factory:submodel:job_log
 4. 데이터 필터링 → status="FAILED" AND "cooling" in process_steps
 5. 결과 반환 → Job J-1002 발견
 ```
 
+**Standard 서버 모드:** ✨ **NEW**
+```
+1. DSL 파싱 → {"goal": "query_failed_jobs_with_cooling", "date": "2025-08-11"}
+2. 온톨로지 조회 → ActionSequence: [ActionFetchJobLog, ActionFilterData]
+3. Standard AAS 조회 → AASQueryClient.get_submodel_by_urn()
+4. 표준 데이터 파싱 → AAS v3.0 SubmodelElement 구조 처리
+5. 동일 결과 반환 → Job J-1002 발견 (표준 호환)
+```
+
 ---
 
-### ⏱️ 시나리오 2: Goal 3 - 생산 시간 예측 (3분) ✨ NEW
+### ⏱️ 시나리오 2: Goal 3 - 생산 시간 예측 (3분) ✅ **파일 시스템 개선** 
 
 **비즈니스 케이스**: 생산 계획 담당자가 새로운 주문에 대한 예상 완료 시간을 예측하여 고객에게 정확한 납기 제공
 
-#### 2.1 요청 실행
+#### 2.1 Standard 서버 + 동적 파일 시스템 테스트 ✨ **NEW**
 ```bash
+export USE_STANDARD_SERVER=true
+export AAS_SERVER_PORT=5001
+export FORCE_LOCAL_MODE=true    # 로컬 임시 디렉토리 사용
+export DEBUG_MODE=true          # 파일 경로 해결 과정 확인
+
 curl -X POST "http://127.0.0.1:8080/execute-goal" \
   -H "Content-Type: application/json" \
   -d '{
-    "goal": "predict_first_completion_time",
-    "product_id": "P-3001",
-    "quantity": 100
+    "goal": "predict_first_completion_time", 
+    "product_id": "Product-A",
+    "quantity": 25
   }' | python3 -m json.tool
 ```
 
-#### 2.2 예상 응답
+#### 2.2 Kubernetes 환경 테스트 (PVC 사용)
+```bash
+export USE_STANDARD_SERVER=true
+export SIMULATION_WORK_DIR=/data  # K8s PVC 경로
+# PathResolver가 자동으로 K8s 환경 감지 후 PVC 사용
+
+kubectl exec -it api-deployment-xxx -- \
+  curl -X POST "http://localhost:80/execute-goal" \
+  -H "Content-Type: application/json" \
+  -d '{"goal": "predict_first_completion_time", "product_id": "Product-B", "quantity": 50}'
+```
+
+#### 2.3 예상 응답 (개선된 파일 시스템)
 ```json
 {
     "goal": "predict_first_completion_time",
     "params": {
-        "product_id": "P-3001",
-        "quantity": 100
+        "product_id": "Product-A",
+        "quantity": 25
     },
     "result": {
         "predicted_completion_time": "2025-08-11T16:30:00Z",
@@ -309,6 +402,24 @@ curl -X POST "http://127.0.0.1:8080/execute-goal" \
         "details": "Simulation based on provided inputs."
     }
 }
+```
+
+#### 2.4 **동적 파일 시스템 해결 과정** ✨ **NEW**
+```
+🔧 PathResolver 동작 과정:
+1. 환경 감지: is_kubernetes_environment() → False (로컬)
+2. FORCE_LOCAL_MODE=true 감지 → 임시 디렉토리 강제 사용
+3. 작업 디렉토리 생성: /tmp/factory_automation/current
+4. 시뮬레이션 파일 생성: simulation_inputs.json
+5. K8s Job 생성: simulator-job-xxx (PVC 또는 임시 볼륨 마운트)
+6. Job 완료 후 결과 반환
+
+📁 파일 시스템 로그 예시:
+🔧 Force local mode: Using /tmp/factory_automation
+✅ Work directory ready: /tmp/factory_automation/current  
+INFO: Created simulation input file (job_id: abc123)
+INFO: Kubernetes Job created successfully
+✅ Job completed, results retrieved
 ```
 
 #### 2.3 기술적 흐름 설명
