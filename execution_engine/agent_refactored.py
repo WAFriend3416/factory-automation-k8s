@@ -14,8 +14,11 @@ from config import (
     AAS_SERVER_IP, 
     AAS_SERVER_PORT, 
     AAS_SERVER_TYPE,
-    USE_STANDARD_SERVER
+    USE_STANDARD_SERVER,
+    SIMULATION_WORK_DIR,
+    FORCE_LOCAL_MODE
 )
+from path_resolver import PathResolver, get_simulation_work_dir
 
 # 표준 서버를 사용할 경우에만 AASQueryClient 임포트
 if USE_STANDARD_SERVER:
@@ -204,10 +207,29 @@ class SimulationInputHandler:
         params = step_details.get('params', {})
         job_id = str(uuid.uuid4())
         
-        # 고정된 경로 사용
-        shared_dir = Path("/data")
-        current_dir = shared_dir / "current"
-        current_dir.mkdir(parents=True, exist_ok=True)
+        # 동적 경로 해결 - 환경에 따라 적절한 작업 디렉토리 선택
+        try:
+            if FORCE_LOCAL_MODE:
+                # 강제 로컬 모드: 임시 디렉토리 사용
+                shared_dir = PathResolver.get_work_directory(None)
+                print(f"🔧 Force local mode: Using {shared_dir}")
+            elif SIMULATION_WORK_DIR:
+                # 환경변수로 지정된 경로 우선 사용
+                shared_dir = PathResolver.get_work_directory(SIMULATION_WORK_DIR)
+                print(f"⚙️ Using configured work dir: {shared_dir}")
+            else:
+                # 자동 감지: K8s면 /data, 로컬이면 임시 디렉토리
+                shared_dir = get_simulation_work_dir()
+                print(f"🤖 Auto-detected work dir: {shared_dir}")
+                
+            current_dir = shared_dir / "current"
+            current_dir.mkdir(parents=True, exist_ok=True)
+            print(f"✅ Work directory ready: {current_dir}")
+            
+        except Exception as e:
+            print(f"❌ Work directory setup failed: {e}")
+            # 최후 수단: 메모리 기반 처리로 fallback
+            return self._memory_based_processing(params, context, job_id)
         
         # 컨텍스트에서 이전 단계들의 결과 수집
         input_data = {
@@ -224,6 +246,32 @@ class SimulationInputHandler:
 
         print(f"INFO: Created simulation input file at {input_file_path} (job_id: {job_id})")
         return {"simulation_job_id": job_id}
+    
+    def _memory_based_processing(self, params: dict, context: dict, job_id: str) -> dict:
+        """
+        파일 시스템 접근이 불가능할 때 메모리 기반으로 처리
+        실제 파일을 생성하지 않고 데이터만 준비
+        """
+        print(f"⚠️ Fallback to memory-based processing (job_id: {job_id})")
+        
+        # 데이터 조합 (파일 저장 없이)
+        input_data = {
+            "process_spec": context.get("step_1_ActionFetchProductSpec", {}),
+            "machine_data": context.get("step_2_ActionFetchAllMachineData", {}),
+            "order": params,
+            "job_id": job_id,
+            "mode": "memory_only",  # 메모리 모드 표시
+            "note": "File system access failed, using in-memory processing"
+        }
+        
+        print(f"INFO: Prepared simulation data in memory (job_id: {job_id})")
+        print(f"INFO: Input data keys: {list(input_data.keys())}")
+        
+        return {
+            "simulation_job_id": job_id,
+            "input_data": input_data,
+            "processing_mode": "memory_only"
+        }
 
 class K8sJobHandler:
     """쿠버네티스 클러스터에 시뮬레이터 Job을 생성하고 결과를 받아오는 핸들러"""

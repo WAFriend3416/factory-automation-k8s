@@ -46,6 +46,14 @@ else:
     
     print(f"📦 Using MOCK AAS Server at {AAS_SERVER_URL}")
 
+# ============================================================
+# 작업 디렉토리 설정 - 환경별 동적 경로 해결
+# ============================================================
+
+# 시뮬레이션 작업 디렉토리 설정
+SIMULATION_WORK_DIR = os.environ.get("SIMULATION_WORK_DIR", None)  # None이면 자동 감지
+FORCE_LOCAL_MODE = os.environ.get("FORCE_LOCAL_MODE", "false").lower() == "true"
+
 # 디버그 정보 출력 (개발 중에만 사용)
 DEBUG_MODE = os.environ.get("DEBUG_MODE", "false").lower() == "true"
 if DEBUG_MODE:
@@ -54,3 +62,5 @@ if DEBUG_MODE:
     print(f"[DEBUG] Server Port: {AAS_SERVER_PORT}")
     print(f"[DEBUG] Ontology Path: {ONTOLOGY_FILE_PATH}")
     print(f"[DEBUG] AAS Data Path: {AAS_DATA_FILE_PATH}")
+    print(f"[DEBUG] Simulation Work Dir: {SIMULATION_WORK_DIR}")
+    print(f"[DEBUG] Force Local Mode: {FORCE_LOCAL_MODE}")
