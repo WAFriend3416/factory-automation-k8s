@@ -17,8 +17,10 @@
 ### 🔄 **듀얼 모드 시연** (Mock & Standard AAS Server)
 1. **Goal 1**: 특정 날짜의 냉각 공정 실패 작업 조회 ✅
    - Mock 서버: ✅ 완전 지원 | Standard 서버: ✅ **완전 지원**
-2. **Goal 3**: 생산 시간 예측 (동적 시뮬레이터 Job 생성) ✅  
-   - Mock 서버: ✅ 완전 지원 | Standard 서버: ✅ **완전 지원** (파일 시스템 개선)
+2. **Goal 3**: 생산 시간 예측 (동적 시뮬레이터 Job 생성) ✅ **K8s 환경 테스트 완료 (2025-08-25)**
+   - Mock 서버: ✅ 완전 지원 | Standard 서버: ✅ **완전 지원**
+   - **K8s Job 생성**: ✅ 동적 Job 생성 및 PVC 데이터 공유
+   - **AAS 데이터 통합**: ✅ J1,J2,J3,M1,M2,M3 실제 데이터 활용
 3. **Goal 4**: 실시간 제품 위치 추적 ✅ **NEW**
    - Mock 서버: ✅ 완전 지원 | Standard 서버: ✅ **완전 지원**
 4. **Goal 2**: 이상 감지 (부분 지원)
@@ -352,7 +354,7 @@ curl -X POST "http://127.0.0.1:8080/execute-goal" \
 
 ---
 
-### ⏱️ 시나리오 2: Goal 3 - 생산 시간 예측 (3분) ✅ **파일 시스템 개선** 
+### ⏱️ 시나리오 2: Goal 3 - 생산 시간 예측 (3분) ✅ **K8s 환경 완전 구현** 🎉
 
 **비즈니스 케이스**: 생산 계획 담당자가 새로운 주문에 대한 예상 완료 시간을 예측하여 고객에게 정확한 납기 제공
 
@@ -372,30 +374,39 @@ curl -X POST "http://127.0.0.1:8080/execute-goal" \
   }' | python3 -m json.tool
 ```
 
-#### 2.2 Kubernetes 환경 테스트 (PVC 사용)
+#### 2.2 Kubernetes 환경 테스트 (PVC 사용) ✅ **실제 K8s 테스트 완료**
 ```bash
-export USE_STANDARD_SERVER=true
-export SIMULATION_WORK_DIR=/data  # K8s PVC 경로
-# PathResolver가 자동으로 K8s 환경 감지 후 PVC 사용
+# K8s 환경에서는 환경변수가 자동 설정됨
+# PVC 경로: /data (factory-shared-pvc 마운트)
 
-kubectl exec -it api-deployment-xxx -- \
-  curl -X POST "http://localhost:80/execute-goal" \
+# 포트 포워딩 설정 후 테스트
+kubectl port-forward service/api-service 8080:80 &
+curl -X POST "http://localhost:8080/execute-goal" \
   -H "Content-Type: application/json" \
-  -d '{"goal": "predict_first_completion_time", "product_id": "Product-B", "quantity": 50}'
+  -d '{"goal": "predict_first_completion_time", "product_id": "P1", "quantity": 100}'
 ```
 
-#### 2.3 예상 응답 (개선된 파일 시스템)
+#### 2.3 실제 K8s 테스트 응답 (2025-08-25 검증됨) ✅
 ```json
 {
     "goal": "predict_first_completion_time",
     "params": {
-        "product_id": "Product-A",
-        "quantity": 25
+        "product_id": "P1",
+        "quantity": 100
     },
     "result": {
-        "predicted_completion_time": "2025-08-11T16:30:00Z",
-        "confidence": 0.85,
-        "details": "Simulation based on provided inputs."
+        "predicted_completion_time": "2025-08-11T11:00:00Z",
+        "confidence": 0.95,
+        "details": "Simple AASX simulation completed. Total operations: 7, Machine utilization: 100.0%",
+        "simulator_type": "aasx-main",
+        "simulation_time_minutes": 180,
+        "machine_loads": {
+            "M1": 120,
+            "M2": 60,
+            "M3": 30
+        },
+        "job_name": "aasx-simulator-7a89d8d0",
+        "aas_server": "aas-mock-service:5001"
     }
 }
 ```
@@ -418,14 +429,14 @@ INFO: Kubernetes Job created successfully
 ✅ Job completed, results retrieved
 ```
 
-#### 2.3 기술적 흐름 설명
+#### 2.5 기술적 흐름 설명 (K8s 환경 검증 완료)
 ```
-1. DSL 파싱 → {"goal": "predict_first_completion_time", "product_id": "P-3001", "quantity": 100}
+1. DSL 파싱 → {"goal": "predict_first_completion_time", "product_id": "P1", "quantity": 100}
 2. 온톨로지 조회 → ActionSequence: [
-     ActionFetchProductSpec,      # 제품 사양 조회
-     ActionFetchAllMachineData,    # 기계 상태 조회
-     ActionAssembleSimulatorInputs,# 시뮬레이션 입력 생성
-     ActionRunSimulator            # 시뮬레이터 Job 실행
+     ActionFetchProductSpec,      # J1,J2,J3 process_plan 조회
+     ActionFetchAllMachineData,    # M1,M2,M3 process_data 조회
+     ActionAssembleSimulatorInputs,# PVC에 데이터 저장
+     ActionRunProductionSimulator  # K8s Job 생성 및 실행
    ]
 3. AAS 데이터 수집:
    - 제품 사양: GET /submodels/urn:factory:submodel:process_specification:all
