@@ -494,7 +494,7 @@ class EnhancedDockerRunHandler:
             # AASX simulator 컨테이너 (단순화된 버전)
             container = client.V1Container(
                 name="aasx-simulator",
-                image="aasx-simple:latest",  # 새로 생성한 단순화된 이미지
+                image="aasx-main-lite:latest",  # AASX-main 복잡한 시뮬레이터
                 image_pull_policy="Never",
                 volume_mounts=[volume_mount],
                 env=env_vars
@@ -531,7 +531,7 @@ class EnhancedDockerRunHandler:
             # Job 완료 대기
             print("  ⏳ Job 완료 대기 중...")
             job_completed = False
-            max_wait_time = 300  # 최대 5분 대기
+            max_wait_time = 1800  # 최대 30분 대기 (AASX-main 복잡한 시뮬레이터용)
             wait_time = 0
             
             while not job_completed and wait_time < max_wait_time:
