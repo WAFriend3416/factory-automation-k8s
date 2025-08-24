@@ -37,9 +37,10 @@ class SimulationDataConverter:
         for job_id in self.job_ids:
             print(f"  📋 Job {job_id} 조회 중...")
             try:
-                # Job은 AAS Shell 또는 Submodel로 저장되었을 수 있음
-                job_shell = self.client.get_shell_by_id(job_id)
-                job_submodel = self.client.get_submodel_by_id(job_id)
+                # Job은 AAS Shell로 저장됨: urn:factory:job:J1
+                job_shell_id = f"urn:factory:job:{job_id}"
+                job_shell = self.client.get_shell_by_id(job_shell_id)
+                job_submodel = self.client.get_submodel_by_id(job_shell_id)
                 
                 if job_shell:
                     aas_data['jobs'][job_id] = {
@@ -64,8 +65,10 @@ class SimulationDataConverter:
         for machine_id in self.machine_ids:
             print(f"  🔧 Machine {machine_id} 조회 중...")
             try:
-                machine_shell = self.client.get_shell_by_id(machine_id)
-                machine_submodel = self.client.get_submodel_by_id(machine_id)
+                # Machine은 AAS Shell로 저장됨: urn:factory:machine:M1
+                machine_shell_id = f"urn:factory:machine:{machine_id}"
+                machine_shell = self.client.get_shell_by_id(machine_shell_id)
+                machine_submodel = self.client.get_submodel_by_id(machine_shell_id)
                 
                 if machine_shell:
                     aas_data['machines'][machine_id] = {

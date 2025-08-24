@@ -19,7 +19,7 @@ spec:
             claimName: factory-shared-pvc
       containers:
       - name: api-server
-        image: factory-api:latest
+        image: api-server:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 8000

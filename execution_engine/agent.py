@@ -75,10 +75,47 @@ class AASQueryHandler:
         goal = params.get('goal')
         action_id = step_details.get('action_id')
         
-        # ActionFetchAllMachineData 같은 복합 조회를 위한 로직
-        if action_id == 'ActionFetchAllMachineData':
-            print("INFO: Simulating fetch of all machine data.")
-            target_sm_id = "urn:factory:submodel:capability:cnc-01"
+        # Goal 3의 ActionFetchProductSpec: J1, J2, J3 process_plan 조회
+        if action_id == 'ActionFetchProductSpec' and goal == 'predict_first_completion_time':
+            print("INFO: Fetching process plans from J1, J2, J3 for Goal 3")
+            all_process_data = []
+            
+            # J1, J2, J3의 process_plan 조회
+            for job_id in ['J1', 'J2', 'J3']:
+                try:
+                    target_sm_id = f"urn:factory:submodel:process_plan:{job_id}"
+                    if USE_STANDARD_SERVER:
+                        result = self._query_standard_server(target_sm_id)
+                    else:
+                        result = self._query_mock_server(target_sm_id)
+                    all_process_data.append(result)
+                    print(f"  ✅ {job_id} process_plan fetched")
+                except Exception as e:
+                    print(f"  ⚠️ {job_id} process_plan not found: {e}")
+            
+            return {"process_specifications": all_process_data} if all_process_data else {"message": "No process data found"}
+        
+        # ActionFetchAllMachineData: M1, M2, M3 데이터 조회
+        elif action_id == 'ActionFetchAllMachineData':
+            print("INFO: Fetching machine data from M1, M2, M3")
+            all_machine_data = []
+            
+            # M1, M2, M3의 process_data 조회
+            for machine_id in ['M1', 'M2', 'M3']:
+                try:
+                    target_sm_id = f"urn:factory:submodel:process_data:{machine_id}"
+                    if USE_STANDARD_SERVER:
+                        result = self._query_standard_server(target_sm_id)
+                    else:
+                        result = self._query_mock_server(target_sm_id)
+                    all_machine_data.append(result)
+                    print(f"  ✅ {machine_id} process_data fetched")
+                except Exception as e:
+                    print(f"  ⚠️ {machine_id} process_data not found: {e}")
+                    
+            return {"machine_capabilities": all_machine_data} if all_machine_data else {"message": "No machine data found"}
+        
+        # 기존 로직
         else:
             target_sm_id = step_details.get('target_submodel_id')
             if not target_sm_id:
@@ -96,10 +133,21 @@ class AASQueryHandler:
                     raise ValueError(f"Cannot determine target for goal: {goal}")
         
         # 서버 타입에 따라 다른 쿼리 방식 사용
-        if USE_STANDARD_SERVER:
-            return self._query_standard_server(target_sm_id)
-        else:
-            return self._query_mock_server(target_sm_id)
+        try:
+            if USE_STANDARD_SERVER:
+                return self._query_standard_server(target_sm_id)
+            else:
+                return self._query_mock_server(target_sm_id)
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                # Goal 3의 경우 404 에러를 무시하고 빈 데이터 반환 (fallback 로직이 처리)
+                if goal == 'predict_first_completion_time':
+                    print(f"WARNING: Submodel {target_sm_id} not found. Using fallback data.")
+                    return {"message": "Submodel not found, will use fallback data"}
+                else:
+                    raise
+            else:
+                raise
 
 class DataFilteringHandler:
     """AAS에서 가져온 데이터를 DSL 조건에 맞게 필터링하거나 가공하는 핸들러"""
