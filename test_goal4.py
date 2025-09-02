@@ -7,17 +7,17 @@ import requests
 import json
 import sys
 
-def test_goal4(product_id="P-12345"):
+def test_goal4(product_id="product-c"):
     print("=" * 60)
     print("🔍 Goal 4: Product Location Tracking Test")
     print("=" * 60)
     
-    # Kubernetes 환경에서 실행 중인 API 서버 주소
+    # Kubernetes 환경에서 실행 중인 API 서버 주소 (포트 포워딩: 8080 -> 80)
     url = "http://localhost:8080/execute-goal"
     
     # Goal 4 요청 데이터
     payload = {
-        "goal": "track_product_location",
+        "goal": "track_product_position",
         "product_id": product_id
     }
     
@@ -98,7 +98,7 @@ def main():
         product_id = sys.argv[1]
         print(f"Using custom product ID: {product_id}")
     else:
-        product_id = "P-12345"
+        product_id = "product-c"
         print(f"Using default product ID: {product_id}")
     
     test_goal4(product_id)

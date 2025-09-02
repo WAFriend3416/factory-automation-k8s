@@ -12,15 +12,14 @@ cd ~/Desktop/aas-project/gemini-ver/factory-automation-k8s
 
 # 2. Docker 이미지 빌드
 docker build -f api.Dockerfile -t api-server:latest .
-docker build -f aas_mock_server.Dockerfile -t aas-mock-server:latest .
 docker build -f aasx_simple.Dockerfile -t aasx-simple:latest .
 
 # 3. Kubernetes 배포
 kubectl apply -f k8s/
 
-# 4. 포트 포워딩
+# 4. 포트 포워딩 (기존 프로세스 종료 후)
+lsof -ti :8080 | xargs kill -9 2>/dev/null || echo "8080 포트 사용 중인 프로세스 없음"
 kubectl port-forward service/api-service 8080:80 &
-kubectl port-forward service/aas-mock-service 5001:5001 &
 
 # 5. Goal 테스트
 python test_goal1.py  # Goal 1: 실패한 Job 조회
@@ -91,10 +90,6 @@ brew install git
 ### 주요 디렉토리 구조
 ```
 factory-automation-k8s/
-├── aas_mock_server/           # Mock AAS 서버 (Flask)
-│   ├── server.py              # AAS 서버 메인 코드
-│   └── data/                  # AAS 데이터 저장
-│       └── aas_model_v2.json  # AAS 모델 데이터
 ├── api/                       # FastAPI 메인 서버
 │   ├── main.py               # API 엔드포인트
 │   └── schemas.py            # 데이터 모델 정의
@@ -104,8 +99,7 @@ factory-automation-k8s/
 ├── k8s/                      # Kubernetes 매니페스트 파일
 │   ├── 00-rbac.yaml         # RBAC 설정
 │   ├── 01-pvc.yaml          # PersistentVolumeClaim
-│   ├── 02-api-server.yaml   # API 서버 배포
-│   └── 03-aas-mock.yaml     # AAS Mock 서버 배포
+│   └── 02-api-server.yaml   # API 서버 배포
 ├── AASX-main/                # AASX 시뮬레이터
 │   └── simulatePlant_AASX_v3.py  # 시뮬레이터 코드
 ├── ontology/                 # 온톨로지 파일
@@ -117,17 +111,13 @@ factory-automation-k8s/
 
 ### 핵심 컴포넌트
 
-1. **AAS Mock Server (포트 5001)**
-   - AAS v3.0 표준 호환 서버
-   - URN 기반 식별자 사용 (예: `urn:factory:job:J1`)
-   - Base64 URL 인코딩된 ID로 접근
-
-2. **API Server (포트 8000)**
+1. **API Server (포트 8000)**
    - FastAPI 기반 REST API
    - DSL 요청을 온톨로지 기반 실행 계획으로 변환
    - Kubernetes Job 동적 생성
+   - 외부 AAS 서버(localhost:5001)에 접근
 
-3. **AASX Simulator**
+2. **AASX Simulator**
    - Docker 컨테이너로 실행
    - JSON 형식 입력 데이터 처리
    - 생산 시간 예측 시뮬레이션
@@ -199,19 +189,8 @@ docker build -f api.Dockerfile -t api-server:latest .
 docker images | grep api-server
 ```
 
-### 4.2 AAS Mock Server 이미지 빌드
-```bash
-# aas_mock_server.Dockerfile 작성 확인
-cat aas_mock_server.Dockerfile
 
-# 이미지 빌드
-docker build -f aas_mock_server.Dockerfile -t aas-mock-server:latest .
-
-# 빌드 확인
-docker images | grep aas-mock-server
-```
-
-### 4.3 AASX Simulator 이미지 빌드
+### 4.2 AASX Simulator 이미지 빌드
 ```bash
 # aasx_simple.Dockerfile 작성 확인
 cat aasx_simple.Dockerfile
@@ -256,24 +235,20 @@ kubectl apply -f k8s/01-pvc.yaml
 # 3. API 서버 배포
 kubectl apply -f k8s/02-api-server.yaml
 
-# 4. AAS Mock 서버 배포
-kubectl apply -f k8s/03-aas-mock.yaml
-
 # 배포 상태 확인
 kubectl get all
 ```
 
 ### 5.4 서비스 포트 포워딩
 ```bash
+# 기존 8080 포트 사용 프로세스 종료 (필요시)
+lsof -ti :8080 | xargs kill -9 2>/dev/null || echo "8080 포트 사용 중인 프로세스 없음"
+
 # API 서버 포트 포워딩 (8080 → 80)
 kubectl port-forward service/api-service 8080:80 &
 
-# AAS Mock 서버 포트 포워딩 (5001 → 5001)
-kubectl port-forward service/aas-mock-service 5001:5001 &
-
 # 포트 포워딩 확인
 lsof -i :8080
-lsof -i :5001
 ```
 
 ---
@@ -506,8 +481,8 @@ kubectl describe pod <pod-name>
 # API 서버 헬스 체크
 curl http://localhost:8080/health
 
-# AAS Mock 서버 테스트
-curl http://localhost:5001/submodels/urn:factory:submodel:job_log
+# 외부 AAS 서버 테스트 (localhost:5001에 실제 AAS 서비스가 실행 중이어야 함)
+curl http://localhost:5001/health
 ```
 
 ### 9.3 Job 모니터링 (Goal 3)
@@ -550,15 +525,14 @@ exit
 #### 문제: API 서버가 AAS 서버에 연결할 수 없음
 ```bash
 # 해결 방법
-# 1. AAS Mock 서버 Pod 상태 확인
-kubectl get pods | grep aas-mock
+# 1. API 서버 Pod 상태 확인
+kubectl get pods | grep api
 
 # 2. 서비스 확인
-kubectl get svc aas-mock-service
+kubectl get svc api-service
 
-# 3. 포트 포워딩 재시작
-pkill -f "port-forward.*5001"
-kubectl port-forward service/aas-mock-service 5001:5001 &
+# 3. 외부 AAS 서버(localhost:5001) 접근 가능 여부 확인
+curl -f http://localhost:5001/health || echo "외부 AAS 서버가 실행 중인지 확인하세요"
 ```
 
 #### 문제: Goal 3 실행 시 타임아웃
@@ -583,8 +557,8 @@ docker images | grep aasx-simple
 # 1. 온톨로지 파일 확인
 ls -la ontology/factory_ontology_v2.ttl
 
-# 2. AAS 데이터 파일 확인
-ls -la aas_mock_server/data/aas_model_v2.json
+# 2. 외부 AAS 서버 접근 확인
+curl -f http://localhost:5001/health
 
 # 3. 환경 변수 확인
 env | grep AAS
@@ -595,7 +569,6 @@ env | grep USE_STANDARD_SERVER
 ```bash
 # 모든 Pod 로그 수집
 kubectl logs deployment/api-deployment > api.log
-kubectl logs deployment/aas-mock-deployment > aas.log
 
 # 이벤트 확인
 kubectl get events --sort-by='.lastTimestamp'
@@ -608,15 +581,14 @@ kubectl delete -f k8s/
 
 # 2. Docker 이미지 재빌드
 docker build -f api.Dockerfile -t api-server:latest .
-docker build -f aas_mock_server.Dockerfile -t aas-mock-server:latest .
 docker build -f aasx_simple.Dockerfile -t aasx-simple:latest .
 
 # 3. 재배포
 kubectl apply -f k8s/
 
-# 4. 포트 포워딩
+# 4. 포트 포워딩 (기존 프로세스 종료 후)
+lsof -ti :8080 | xargs kill -9 2>/dev/null || echo "8080 포트 사용 중인 프로세스 없음"
 kubectl port-forward service/api-service 8080:80 &
-kubectl port-forward service/aas-mock-service 5001:5001 &
 ```
 
 ---
@@ -633,12 +605,14 @@ kubectl port-forward service/aas-mock-service 5001:5001 &
 
 ### 주요 포트
 - API Server: `localhost:8080`
-- AAS Mock Server: `localhost:5001`
+- 외부 AAS Server: `localhost:5001` (별도 실행 필요)
 
 ### 중요 파일 경로
 - 온톨로지: `ontology/factory_ontology_v2.ttl`
-- AAS 데이터: `aas_mock_server/data/aas_model_v2.json`
 - 시뮬레이터: `AASX-main/simulatePlant_AASX_v3.py`
+
+### 외부 의존성
+- AAS Server가 `localhost:5001`에서 실행 중이어야 합니다
 
 ---
 

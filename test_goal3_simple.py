@@ -11,7 +11,7 @@ def test_goal3_with_fallback():
     print("=" * 60)
     
     # API endpoint
-    url = "http://127.0.0.1:8000/execute-goal"
+    url = "http://localhost:80/execute-goal"
     
     # Test data
     payload = {

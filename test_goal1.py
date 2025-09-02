@@ -17,7 +17,7 @@ def test_goal1(date=None):
     if date is None:
         date = "2025-07-17"
     
-    # Kubernetes 환경에서 실행 중인 API 서버 주소
+    # Kubernetes 환경에서 실행 중인 API 서버 주소 (포트 포워딩: 8080 -> 80)
     url = "http://localhost:8080/execute-goal"
     
     # Goal 1 요청 데이터
