@@ -8,7 +8,7 @@
 
 ```bash
 # 1. 프로젝트 클론
-cd ~/Desktop/aas-project/gemini-ver/factory-automation-k8s
+cd /path/to/your/project/factory-automation-k8s
 
 # 2. Docker 이미지 빌드
 docker build -f api.Dockerfile -t api-server:latest .
@@ -129,8 +129,8 @@ factory-automation-k8s/
 ### 3.1 프로젝트 클론
 ```bash
 # 프로젝트 디렉토리 생성
-mkdir -p ~/Desktop/aas-project/gemini-ver
-cd ~/Desktop/aas-project/gemini-ver
+mkdir -p /path/to/your/project
+cd /path/to/your/project
 
 # Git 클론 (실제 리포지토리 URL로 변경)
 git clone <repository-url> factory-automation-k8s
