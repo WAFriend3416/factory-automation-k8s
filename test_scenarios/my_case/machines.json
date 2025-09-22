@@ -1,0 +1,31 @@
+{
+  "machines": [
+    {
+      "id": "M1",
+      "type": "CNC_Machine",
+      "status": "available",
+      "location": "Zone_A",
+      "capabilities": ["machining"],
+      "dispatch_rule": "FIFO",
+      "next_available_time": "2025-08-11T08:00:00Z"
+    },
+    {
+      "id": "M2",
+      "type": "Multi_Purpose",
+      "status": "available",
+      "location": "Zone_B",
+      "capabilities": ["machining", "assembly"],
+      "dispatch_rule": "SPT",
+      "next_available_time": "2025-08-11T08:30:00Z"
+    },
+    {
+      "id": "M3",
+      "type": "Test_Station",
+      "status": "available",
+      "location": "Zone_C",
+      "capabilities": ["assembly", "testing"],
+      "dispatch_rule": "EDD",
+      "next_available_time": "2025-08-11T09:00:00Z"
+    }
+  ]
+}
