@@ -1,5 +1,5 @@
 # NSGA-II Simulator Docker Container for Goal3
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 # 시스템 패키지 업데이트 및 필요한 도구 설치
 RUN apt-get update && apt-get install -y \
@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # NSGA-II 시뮬레이터 클론
-RUN git clone https://github.com/Otober/AASX.git nsga2-simulator
+RUN git clone -b NSGA https://github.com/Otober/AASX.git nsga2-simulator
 
 # 시뮬레이터 디렉터리로 이동
 WORKDIR /app/nsga2-simulator

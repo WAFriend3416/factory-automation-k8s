@@ -1,0 +1,77 @@
+{
+  "step": "1.5_metadata_analysis",
+  "timestamp": "2025-09-24T22:47:56.413679",
+  "description": "SWRL 추론 결과를 바탕으로 AASX 서버 데이터 위치 매핑 및 YAML 설정 파일 생성",
+  "process": {
+    "input": "SWRL inference results (required submodels and JSON files)",
+    "analysis": "Map each required JSON file to specific AASX submodel elements",
+    "output": "NSGA2Model_sources.yaml configuration file"
+  },
+  "mapping_analysis": {
+    "jobs.json": {
+      "swrl_requirement": "FactorySimulation.jobs_data",
+      "aasx_location": {
+        "shell_id": "urn:factory:simulation:main",
+        "submodel_id": "urn:factory:submodel:simulation_data",
+        "element_id": "jobs_data",
+        "data_type": "Property.value (JSON string)"
+      }
+    },
+    "operations.json": {
+      "swrl_requirement": "FactorySimulation.operations_data",
+      "aasx_location": {
+        "shell_id": "urn:factory:simulation:main",
+        "submodel_id": "urn:factory:submodel:simulation_data",
+        "element_id": "operations_data",
+        "data_type": "Property.value (JSON string)"
+      }
+    },
+    "operation_durations.json": {
+      "swrl_requirement": "FactorySimulation.operation_durations_data",
+      "aasx_location": {
+        "shell_id": "urn:factory:simulation:main",
+        "submodel_id": "urn:factory:submodel:simulation_data",
+        "element_id": "operation_durations_data",
+        "data_type": "Property.value (JSON string)"
+      }
+    },
+    "machine_transfer_time.json": {
+      "swrl_requirement": "FactorySimulation.machine_transfer_time_data",
+      "aasx_location": {
+        "shell_id": "urn:factory:simulation:main",
+        "submodel_id": "urn:factory:submodel:simulation_data",
+        "element_id": "machine_transfer_time_data",
+        "data_type": "Property.value (JSON string)"
+      }
+    },
+    "job_release.json": {
+      "swrl_requirement": "FactorySimulation.job_release_data",
+      "aasx_location": {
+        "shell_id": "urn:factory:simulation:main",
+        "submodel_id": "urn:factory:submodel:simulation_data",
+        "element_id": "job_release_data",
+        "data_type": "Property.value (JSON string)"
+      }
+    },
+    "machines.json": {
+      "swrl_requirement": "MachineCapability + MachineStatus (M1-M4)",
+      "aasx_location": {
+        "method": "aggregate_multiple_submodels",
+        "sources": [
+          {
+            "machine": "M1-M4",
+            "capability_submodel": "urn:factory:submodel:capability:M{X}",
+            "status_submodel": "urn:factory:submodel:status:M{X}",
+            "required_elements": [
+              "machine_type",
+              "efficiency",
+              "status",
+              "next_available_time",
+              "queue_length"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

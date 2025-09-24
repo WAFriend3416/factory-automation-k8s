@@ -1,0 +1,76 @@
+{
+  "inference_timestamp": "2025-09-24T13:10:00Z",
+  "goal_id": "Goal3",
+  "applied_rules": [
+    "R001",
+    "R002"
+  ],
+  "inferred_data_requirements": {
+    "required_submodels": [
+      "urn:factory:submodel:simulation_data",
+      "urn:factory:submodel:capability:M1-M4",
+      "urn:factory:submodel:status:M1-M4"
+    ],
+    "required_json_files": [
+      "jobs.json",
+      "operations.json",
+      "machines.json",
+      "operation_durations.json",
+      "machine_transfer_time.json",
+      "job_release.json"
+    ]
+  },
+  "aasx_server_queries": {
+    "simulation_data": {
+      "submodel_id": "urn:factory:submodel:simulation_data",
+      "elements": [
+        "jobs_data",
+        "operations_data",
+        "operation_durations_data",
+        "machine_transfer_time_data",
+        "job_release_data"
+      ]
+    },
+    "machine_capabilities": [
+      {
+        "machine": "M1",
+        "submodel_id": "urn:factory:submodel:capability:M1"
+      },
+      {
+        "machine": "M2",
+        "submodel_id": "urn:factory:submodel:capability:M2"
+      },
+      {
+        "machine": "M3",
+        "submodel_id": "urn:factory:submodel:capability:M3"
+      },
+      {
+        "machine": "M4",
+        "submodel_id": "urn:factory:submodel:capability:M4"
+      }
+    ],
+    "machine_status": [
+      {
+        "machine": "M1",
+        "submodel_id": "urn:factory:submodel:status:M1"
+      },
+      {
+        "machine": "M2",
+        "submodel_id": "urn:factory:submodel:status:M2"
+      },
+      {
+        "machine": "M3",
+        "submodel_id": "urn:factory:submodel:status:M3"
+      },
+      {
+        "machine": "M4",
+        "submodel_id": "urn:factory:submodel:status:M4"
+      }
+    ]
+  },
+  "next_step_instructions": {
+    "action": "Query AASX server for specified submodels",
+    "data_extraction_method": "Direct submodel access via GET /submodels/{encoded_id}",
+    "property_value_extraction": "Extract Property.value fields containing JSON strings"
+  }
+}

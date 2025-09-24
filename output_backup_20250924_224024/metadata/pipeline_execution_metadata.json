@@ -1,0 +1,25 @@
+{
+  "pipeline_execution": {
+    "timestamp": "2025-09-24T22:33:55.694552",
+    "total_steps": 3,
+    "success": true,
+    "execution_environment": {
+      "aasx_server": "http://127.0.0.1:5001",
+      "docker_image": "factory-nsga2:latest",
+      "python_version": "3.11.13 (main, Sep  2 2025, 14:10:56) [Clang 20.1.4 ]"
+    }
+  },
+  "data_flow_summary": {
+    "step1_aasx_raw": "Extract Property.value from AASX server submodels",
+    "step2_orchestrator": "Convert extracted data to 6 simulation JSON files",
+    "step3_simulation": "Run NSGA-II optimization with generated files"
+  },
+  "file_counts": {
+    "step1_input": 1,
+    "step1_output": 1,
+    "step2_input": 1,
+    "step2_output": 7,
+    "step3_input": 6,
+    "step3_output": 12
+  }
+}

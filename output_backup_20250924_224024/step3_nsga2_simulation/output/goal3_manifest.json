@@ -1,0 +1,18 @@
+{
+  "execution_id": "nsga2-20250924-132900",
+  "scenario": "my_case",
+  "goal": "predict_first_completion_time",
+  "algorithm": "branch_and_bound",
+  "parameters": {
+    "time_limit": 600,
+    "max_nodes": 50000
+  },
+  "execution_time": 34,
+  "timestamp": "2025-09-24T13:29:00Z",
+  "simulator": "AASX-main",
+  "version": "1.0.0",
+  "result_files": [
+    "simulator_optimization_result.json"
+  ],
+  "status": "completed"
+}

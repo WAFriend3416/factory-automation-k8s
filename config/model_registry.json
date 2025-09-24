@@ -1,0 +1,44 @@
+{
+  "models": [
+    {
+      "modelId": "NSGA2SimulatorModel",
+      "purpose": "FirstCompletionTimePrediction",
+      "version": "1.0.0",
+      "metaDataFile": "NSGA2SimulatorMetaData.json",
+      "modelRef": "aas://ModelCatalog/NSGA2SimulatorModel@1.0.0",
+      "description": "NSGA-II 기반 제조 스케줄 최적화 및 첫 번째 작업 완료 시간 예측 시뮬레이터",
+      "capabilities": [
+        "predict_first_completion_time",
+        "optimize_production_schedule"
+      ],
+      "inputParameters": [
+        { "name": "scenario", "type": "string", "required": true },
+        { "name": "jobCount", "type": "number", "required": false },
+        { "name": "timeLimit", "type": "number", "required": false }
+      ],
+      "outputSchema": [
+        { "name": "predicted_completion_time", "datatype": "number" },
+        { "name": "confidence", "datatype": "number" },
+        { "name": "simulator_type", "datatype": "string" }
+      ],
+      "performance": {
+        "accuracy": 0.85,
+        "avgLatency": "35s",
+        "lastUpdated": "2025-09-22T00:00:00Z"
+      },
+      "container": {
+        "image": "factory-nsga2:latest",
+        "digest": "sha256:...",
+        "executionType": "kubernetes-job"
+      }
+    }
+  ],
+  "metadata": {
+    "registryVersion": "1.0",
+    "lastUpdated": "2025-09-22T15:30:00Z",
+    "totalModels": 1,
+    "supportedPurposes": [
+      "FirstCompletionTimePrediction"
+    ]
+  }
+}

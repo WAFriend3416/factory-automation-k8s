@@ -1,0 +1,40 @@
+{
+  "rule_set_version": "1.0.0",
+  "goal3_rules": {
+    "data_model_selection": {
+      "rule_id": "R001",
+      "description": "Goal3 요청 시 필요한 데이터 모델 결정",
+      "swrl_syntax": "Goal3(?g) ∧ requires(?g, ?data) → needsModel(?g, FactorySimulation) ∧ needsModel(?g, MachineCapability) ∧ needsModel(?g, MachineStatus)",
+      "inference_result": [
+        "urn:factory:submodel:simulation_data",
+        "urn:factory:submodel:capability:M1",
+        "urn:factory:submodel:capability:M2",
+        "urn:factory:submodel:capability:M3",
+        "urn:factory:submodel:capability:M4",
+        "urn:factory:submodel:status:M1",
+        "urn:factory:submodel:status:M2",
+        "urn:factory:submodel:status:M3",
+        "urn:factory:submodel:status:M4"
+      ]
+    },
+    "json_file_expansion": {
+      "rule_id": "R002",
+      "description": "추론된 데이터 모델을 JSON 파일 요구사항으로 확장",
+      "swrl_syntax": "needsModel(?g, FactorySimulation) → requiresFile(?g, jobs.json) ∧ requiresFile(?g, operations.json) ∧ requiresFile(?g, operation_durations.json) ∧ requiresFile(?g, machine_transfer_time.json) ∧ requiresFile(?g, job_release.json)",
+      "expanded_requirements": {
+        "jobs.json": "FactorySimulation.jobs_data",
+        "operations.json": "FactorySimulation.operations_data",
+        "operation_durations.json": "FactorySimulation.operation_durations_data",
+        "machine_transfer_time.json": "FactorySimulation.machine_transfer_time_data",
+        "job_release.json": "FactorySimulation.job_release_data",
+        "machines.json": "MachineCapability + MachineStatus (M1-M4)"
+      }
+    }
+  },
+  "execution_metadata": {
+    "inference_engine": "SWRL-based rule processor",
+    "execution_time": "< 1 second",
+    "rule_application_count": 2,
+    "inferred_facts_count": 15
+  }
+}

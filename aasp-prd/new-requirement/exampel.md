@@ -1,41 +1,42 @@
-QueryGoal
+QueryGoal - Goal3 (NSGA-II Simulator)
 '''
 {
   "QueryGoal": {
-    "goalId": "goal-job-eta-0001",
-    "goalType": "predict_job_completion_time",
+    "goalId": "goal3-first-completion-001",
+    "goalType": "predict_first_completion_time",
     "parameters": [
-      { "key": "jobId",   "value": "JOB-7f2e3a8b-1d" },
-      { "key": "dueDate", "value": @현재시간 },
-     ],
+      { "key": "scenario", "value": "my_case" },
+      { "key": "jobCount", "value": 40 },
+      { "key": "timeLimit", "value": 600 }
+    ],
     "outputSpec": [
-      { "name": "completion_time", "datatype": "datetime" },
-      { "name": "tardiness_s",     "datatype": "number" },
-      { "name": "sla_met",         "datatype": "boolean" }
+      { "name": "predicted_completion_time", "datatype": "number" },
+      { "name": "confidence", "datatype": "number" },
+      { "name": "simulator_type", "datatype": "string" }
     ],
     "termination": [
-      { "key": "condition", "value": "on_job_completed" },
-      { "key": "timeout",   "value": "PT4H" }
+      { "key": "condition", "value": "on_simulation_completed" },
+      { "key": "timeout", "value": "PT10M" }
     ],
-    "selectedModelRef": "aas://ModelCatalog/JobETAModel@1.4.2",
+    "selectedModelRef": "aas://ModelCatalog/NSGA2SimulatorModel@1.0.0",
     "selectedModel": {
-      "modelId": "JobETAModel",
-      "MetaData": "JobEtaMetaData.json",
-      "outputs": ["completion_time","tardiness_s","sla_met"],
-      "preconditions": { "units.time": "s", "runtime.freshness": "PT30S" },
-      "container": { "image": "registry/factory/job-eta:v1.4.2", "digest": "sha256:..." },
-      "catalogVersion": "1.4.2",
+      "modelId": "NSGA2SimulatorModel",
+      "MetaData": "NSGA2SimulatorMetaData.json",
+      "outputs": ["predicted_completion_time","confidence","simulator_type"],
+      "preconditions": { "units.time": "s", "runtime.freshness": "PT5M" },
+      "container": { "image": "factory-nsga2:latest", "digest": "sha256:..." },
+      "catalogVersion": "1.0.0",
       "frozenAt": @현재시간
     },
     "selectionProvenance": {
-      "ruleName": "SWRL:Goal2JobETA",
+      "ruleName": "SWRL:Goal3FirstCompletion",
       "ruleVersion": "v1.0",
       "engine": "SWRL",
-      "evidence": { "matched": ["goalType==predict_job_completion_time","purpose==DeliveryPrediction"] },
+      "evidence": { "matched": ["goalType==predict_first_completion_time","purpose==FirstCompletionTimePrediction"] },
       "inputsHash": "sha256:...",
-      "timestamp": "2025-09-12T00:00:00Z",
+      "timestamp": "2025-09-22T00:00:00Z",
       "notes": ""
-    },
+    }
   }
 }
 
