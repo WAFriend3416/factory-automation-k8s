@@ -2,7 +2,7 @@
   "models": [
     {
       "modelId": "NSGA2SimulatorModel",
-      "purpose": "FirstCompletionTimePrediction",
+      "purpose": "DeliveryPrediction",
       "version": "1.0.0",
       "metaDataFile": "NSGA2SimulatorMetaData.json",
       "modelRef": "aas://ModelCatalog/NSGA2SimulatorModel@1.0.0",
@@ -38,7 +38,7 @@
     "lastUpdated": "2025-09-22T15:30:00Z",
     "totalModels": 1,
     "supportedPurposes": [
-      "FirstCompletionTimePrediction"
+      "DeliveryPrediction"
     ]
   }
 }

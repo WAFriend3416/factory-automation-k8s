@@ -1,0 +1,103 @@
+{
+  "test_timestamp": "2025-09-29T15:25:28.364372",
+  "test_type": "swrl_ontology_reasoning",
+  "ontology_planner_test": {
+    "predict_first_completion_time": {
+      "status": "success",
+      "action_count": 4,
+      "actions": [
+        {
+          "action_id": "ActionFetchProductSpec",
+          "type": "aas_query",
+          "target_submodel_id": "urn:factory:submodel:process_specification:all"
+        },
+        {
+          "action_id": "ActionFetchAllMachineData",
+          "type": "aas_query_multiple",
+          "target_submodel_id": null
+        },
+        {
+          "action_id": "ActionAssembleSimulatorInputs",
+          "type": "internal_processing",
+          "target_submodel_id": null
+        },
+        {
+          "action_id": "ActionRunProductionSimulator",
+          "type": "docker_run",
+          "target_submodel_id": null
+        }
+      ]
+    },
+    "query_failed_work_order": {
+      "status": "success",
+      "action_count": 0,
+      "actions": []
+    },
+    "track_product_position": {
+      "status": "success",
+      "action_count": 2,
+      "actions": [
+        {
+          "action_id": "ActionFetchTrackingData",
+          "type": "aas_query",
+          "target_submodel_id": null
+        },
+        {
+          "action_id": "ActionProcessTrackingData",
+          "type": "data_filtering",
+          "target_submodel_id": null
+        }
+      ]
+    }
+  },
+  "swrl_inference_logic": [
+    {
+      "test_name": "Goal Type → Action Plan 매핑",
+      "input": {
+        "goal_type": "predict_production_time"
+      },
+      "result": "goal3_production_time",
+      "expected": "goal3_production_time",
+      "success": true
+    },
+    {
+      "test_name": "Goal → Action Plan 매핑",
+      "input": {
+        "goal": "predict_first_completion_time"
+      },
+      "error": "No action plan found for goal type: ",
+      "success": false
+    },
+    {
+      "test_name": "냉각 실패 쿼리 매핑",
+      "input": {
+        "goal_type": "query_cooling_failure"
+      },
+      "result": "goal1_cooling_failure",
+      "expected": "goal1_cooling_failure",
+      "success": true
+    }
+  ],
+  "rule_coverage": {
+    "supported_goal_types": [
+      "predict_production_time",
+      "query_cooling_failure",
+      "track_product"
+    ],
+    "supported_goals": [
+      "predict_first_completion_time",
+      "query_failed_work_order",
+      "track_product_position"
+    ],
+    "action_plan_mapping": {
+      "goal3_production_time": "5-step production prediction pipeline",
+      "goal1_cooling_failure": "2-step failure query pipeline",
+      "goal4_product_tracking": "2-step tracking pipeline"
+    }
+  },
+  "summary": {
+    "ontology_loaded": true,
+    "inference_working": true,
+    "coverage_complete": true
+  }
+}

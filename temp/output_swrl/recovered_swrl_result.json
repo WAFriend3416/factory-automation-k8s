@@ -1,0 +1,65 @@
+{
+  "QueryGoal": {
+    "goalId": "predict_job_completion_001",
+    "goalType": "predict_job_completion_time",
+    "parameters": [
+      {
+        "key": "job_id",
+        "value": "J001"
+      },
+      {
+        "key": "current_time",
+        "value": "2025-09-29T06:43:23Z"
+      },
+      {
+        "key": "machine_status",
+        "value": "active"
+      }
+    ],
+    "outputSpec": [
+      {
+        "name": "completion_time",
+        "datatype": "datetime"
+      },
+      {
+        "name": "confidence_score",
+        "datatype": "number"
+      }
+    ],
+    "selectedModelRef": "aas://ModelCatalog/NSGA2SimulatorModel@1.0.0",
+    "selectedModel": {
+      "modelId": "NSGA2SimulatorModel",
+      "MetaData": "NSGA2SimulatorMetaData.json",
+      "outputs": [
+        "predicted_completion_time",
+        "confidence",
+        "simulator_type"
+      ],
+      "preconditions": {
+        "units.time": "s",
+        "runtime.freshness": "PT30S"
+      },
+      "container": {
+        "image": "factory-nsga2:latest",
+        "digest": "sha256:...",
+        "executionType": "kubernetes-job"
+      },
+      "catalogVersion": "1.0.0",
+      "frozenAt": "2025-09-29T15:43:23Z"
+    },
+    "selectionProvenance": {
+      "ruleName": "SWRL:Goal2NSGA2SimulatorModel",
+      "ruleVersion": "v1.0",
+      "engine": "Rule-based Module (SPARQL)",
+      "evidence": {
+        "matched": [
+          "goalType==predict_job_completion_time",
+          "purpose==DeliveryPrediction"
+        ]
+      },
+      "inputsHash": "sha256:-8358565477143431690",
+      "timestamp": "2025-09-29T06:43:23Z",
+      "notes": ""
+    }
+  }
+}
