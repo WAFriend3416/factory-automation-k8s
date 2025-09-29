@@ -41,7 +41,19 @@
 - 🔄 데이터 바인딩 YAML 시스템[진행중] * 이전 담당자의 작업을 이어야해야할 수 있음.
 - 🔄 실제 데이터 수집 및 가공 모듈
 
-### 현재 Goal 시나리오
+## 📝 TODO: QueryGoal Runtime Executor 구현
+- ✅ QueryGoal Runtime Integration Plan 문서 분석 완료
+- ✅ QueryGoal Runtime Executor Implementation Plan 작성 완료
+- ✅ selectedModel 필드 접근 경로 수정 (metaDataFile, container.image 구조)
+- ✅ Goal3 outputSpec 매핑 수정 (estimatedTime, confidence, productionPlan, bottlenecks)
+- 📋 **Git에 저장 필요**: `docs/QueryGoal_Runtime_Executor_Implementation_Plan.md` 커밋하기
+- 🔄 **구현 우선순위**:
+  1. Phase 1: Core Infrastructure (QueryGoalExecutor, ExecutionContext)
+  2. Phase 2: Stage Handlers (SwrlSelectionHandler, YamlBindingHandler, SimulationHandler)
+  3. Phase 3: Common Runtime Components (AAS Client, Container Client)
+  4. Phase 4: Integration & Testing
+
+<!-- ### 현재 Goal 시나리오
 - 총 Goal1,2,3,4 가 존재 , 현재 Goal 1, 3, 4만 구현
 - QueryGoal 형태로 Goal3만 진행
     
@@ -89,4 +101,4 @@ python temp/output_2/goal3_execution_test.py
 ## Git 브랜치 전략
 - `main`: 안정적인 메인 브랜치
 - `feature/*`: 기능 개발 브랜치
-- 커밋 전 항상 `git status` 확인
+- 커밋 전 항상 `git status` 확인 -->
