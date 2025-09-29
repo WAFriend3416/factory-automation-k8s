@@ -1,0 +1,113 @@
+{
+  "input": {
+    "id": "realistic_swrl_goal3",
+    "goal_type": "predict_production_time",
+    "natural_language_query": "WidgetA 100개를 Line1에서 생산하는데 얼마나 걸릴까요?",
+    "parameters": {
+      "goal": "predict_first_completion_time",
+      "product_type": "WidgetA",
+      "quantity": 100,
+      "production_line": "Line1",
+      "current_conditions": {
+        "machine_availability": "high",
+        "material_stock": "sufficient",
+        "operator_shift": "day"
+      }
+    }
+  },
+  "swrl_selection": {
+    "QueryGoal": {
+      "goalId": "realistic_swrl_goal3",
+      "goalType": "predict_job_completion_time",
+      "parameters": [
+        {
+          "key": "goal",
+          "value": "predict_first_completion_time"
+        },
+        {
+          "key": "product_type",
+          "value": "WidgetA"
+        },
+        {
+          "key": "quantity",
+          "value": "100"
+        },
+        {
+          "key": "production_line",
+          "value": "Line1"
+        },
+        {
+          "key": "current_conditions",
+          "value": "{\"machine_availability\": \"high\", \"material_stock\": \"sufficient\", \"operator_shift\": \"day\"}"
+        },
+        {
+          "key": "current_time",
+          "value": "2025-09-29T06:59:36Z"
+        }
+      ],
+      "outputSpec": [
+        {
+          "name": "completion_time",
+          "datatype": "datetime"
+        },
+        {
+          "name": "confidence_score",
+          "datatype": "number"
+        }
+      ],
+      "selectedModelRef": "aas://ModelCatalog/NSGA2SimulatorModel@1.0.0",
+      "selectedModel": {
+        "modelId": "NSGA2SimulatorModel",
+        "MetaData": "NSGA2SimulatorMetaData.json",
+        "outputs": [
+          "predicted_completion_time",
+          "confidence",
+          "simulator_type"
+        ],
+        "preconditions": {
+          "units.time": "s",
+          "runtime.freshness": "PT30S"
+        },
+        "container": {
+          "image": "factory-nsga2:latest",
+          "digest": "sha256:...",
+          "executionType": "kubernetes-job"
+        },
+        "catalogVersion": "1.0.0",
+        "frozenAt": "2025-09-29T15:59:36Z"
+      },
+      "selectionProvenance": {
+        "ruleName": "SWRL:Goal2NSGA2SimulatorModel",
+        "ruleVersion": "v1.0",
+        "engine": "Rule-based Module (SPARQL)",
+        "evidence": {
+          "matched": [
+            "goalType==predict_job_completion_time",
+            "purpose==DeliveryPrediction"
+          ]
+        },
+        "inputsHash": "sha256:2981892622778462544",
+        "timestamp": "2025-09-29T06:59:36Z",
+        "notes": ""
+      }
+    }
+  },
+  "execution_result": {
+    "final_result": {
+      "predicted_completion_time": "2025-08-11T11:00:00Z",
+      "confidence": 0.95,
+      "details": "Simple AASX simulation completed. Total operations: 7, Machine utilization: 100.0%",
+      "simulator_type": "aasx-simple",
+      "simulation_time_minutes": 180,
+      "machine_loads": {
+        "M1": 120,
+        "M2": 60,
+        "M3": 30
+      },
+      "execution_mode": "local",
+      "job_name": "aasx-simulator-5a2a37e7"
+    }
+  },
+  "aas_data": null,
+  "timestamp": "2025-09-29T15:59:36.425630"
+}

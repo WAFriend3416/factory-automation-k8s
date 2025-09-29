@@ -1,0 +1,390 @@
+{
+  "queryGoal": {
+    "QueryGoal": {
+      "goalId": "enhanced_swrl_pipeline_test_001",
+      "goalType": "predict_job_completion_time",
+      "parameters": [
+        {
+          "key": "job_id",
+          "value": "J001"
+        },
+        {
+          "key": "current_time",
+          "value": "@현재시간"
+        },
+        {
+          "key": "machine_status",
+          "value": "active"
+        },
+        {
+          "key": "priority",
+          "value": "high"
+        },
+        {
+          "key": "production_line",
+          "value": "Line1"
+        },
+        {
+          "key": "target_quantity",
+          "value": "100"
+        }
+      ],
+      "outputSpec": [
+        {
+          "name": "completion_time",
+          "datatype": "datetime"
+        },
+        {
+          "name": "confidence_score",
+          "datatype": "number"
+        },
+        {
+          "name": "resource_utilization",
+          "datatype": "object"
+        }
+      ]
+    }
+  },
+  "selectedModel": {
+    "modelId": "NSGA2SimulatorModel",
+    "MetaData": "NSGA2SimulatorMetaData.json",
+    "outputs": [
+      "predicted_completion_time",
+      "confidence",
+      "simulator_type"
+    ],
+    "preconditions": {
+      "units.time": "s",
+      "runtime.freshness": "PT30S"
+    },
+    "container": {
+      "image": "factory-nsga2:latest",
+      "digest": "sha256:...",
+      "executionType": "kubernetes-job"
+    },
+    "catalogVersion": "1.0.0",
+    "frozenAt": "2025-09-29T15:51:18Z"
+  },
+  "selectionProvenance": {
+    "ruleName": "SWRL:Goal2NSGA2SimulatorModel",
+    "ruleVersion": "v1.0",
+    "engine": "Rule-based Module (SPARQL)",
+    "evidence": {
+      "matched": [
+        "goalType==predict_job_completion_time",
+        "purpose==DeliveryPrediction"
+      ]
+    },
+    "inputsHash": "sha256:1903683185648772161",
+    "timestamp": "2025-09-29T06:51:18Z",
+    "notes": ""
+  },
+  "dataBinding": {
+    "data_sources": [
+      {
+        "name": "job_data",
+        "aas_endpoint": "/shells/JobMonitoringAAS/submodels/JobExecution/submodel/submodelElements",
+        "query_params": {
+          "level": "deep"
+        },
+        "data_extraction": {
+          "jobs": "$.value[?(@.idShort=='Jobs')].value",
+          "current_jobs": "$.value[*][?(@.idShort=='Status' && @.value=='Active')]"
+        }
+      },
+      {
+        "name": "machine_data",
+        "aas_endpoint": "/shells/MachineMonitoringAAS/submodels/MachineStatus/submodel/submodelElements",
+        "query_params": {
+          "level": "deep"
+        },
+        "data_extraction": {
+          "machines": "$.value[?(@.idShort=='Machines')].value",
+          "operational_machines": "$.value[*][?(@.idShort=='Status' && @.value=='Operational')]"
+        }
+      },
+      {
+        "name": "process_plan",
+        "aas_endpoint": "/shells/ProcessPlanningAAS/submodels/ProcessDefinition/submodel/submodelElements",
+        "query_params": {
+          "level": "deep"
+        },
+        "data_extraction": {
+          "processes": "$.value[?(@.idShort=='ProcessPlans')].value",
+          "active_processes": "$.value[*][?(@.idShort=='Status' && @.value=='Active')]"
+        }
+      }
+    ],
+    "mapping": {
+      "scenario": "job_completion_prediction",
+      "timeHorizon": "8_hours",
+      "aggregation_level": "job_level"
+    }
+  },
+  "collectedData": {
+    "job_data": {
+      "raw_data": {
+        "value": [
+          {
+            "idShort": "Jobs",
+            "value": [
+              {
+                "idShort": "Job_001",
+                "value": [
+                  {
+                    "idShort": "Status",
+                    "value": "Active"
+                  },
+                  {
+                    "idShort": "Progress",
+                    "value": "30%"
+                  },
+                  {
+                    "idShort": "EstimatedCompletion",
+                    "value": "2025-09-29T18:00:00Z"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "extracted_data": {
+        "jobs": [
+          {
+            "job_id": "J001",
+            "status": "Active",
+            "progress": 0.3,
+            "estimated_completion": "2025-09-29T18:00:00Z"
+          }
+        ],
+        "current_jobs": []
+      },
+      "timestamp": "2025-09-29T15:51:18.645664",
+      "source_endpoint": "/shells/JobMonitoringAAS/submodels/JobExecution/submodel/submodelElements"
+    },
+    "machine_data": {
+      "raw_data": {
+        "value": [
+          {
+            "idShort": "Machines",
+            "value": [
+              {
+                "idShort": "Machine_M1",
+                "value": [
+                  {
+                    "idShort": "Status",
+                    "value": "Operational"
+                  },
+                  {
+                    "idShort": "Efficiency",
+                    "value": "85%"
+                  },
+                  {
+                    "idShort": "QueueLength",
+                    "value": "2"
+                  }
+                ]
+              },
+              {
+                "idShort": "Machine_M2",
+                "value": [
+                  {
+                    "idShort": "Status",
+                    "value": "Operational"
+                  },
+                  {
+                    "idShort": "Efficiency",
+                    "value": "92%"
+                  },
+                  {
+                    "idShort": "QueueLength",
+                    "value": "1"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "extracted_data": {
+        "machines": [
+          {
+            "machine_id": "M1",
+            "status": "Operational",
+            "efficiency": 0.85,
+            "queue_length": 2
+          },
+          {
+            "machine_id": "M2",
+            "status": "Operational",
+            "efficiency": 0.92,
+            "queue_length": 1
+          }
+        ],
+        "operational_machines": []
+      },
+      "timestamp": "2025-09-29T15:51:18.645673",
+      "source_endpoint": "/shells/MachineMonitoringAAS/submodels/MachineStatus/submodel/submodelElements"
+    },
+    "process_plan": {
+      "raw_data": {
+        "value": [
+          {
+            "idShort": "ProcessPlans",
+            "value": [
+              {
+                "idShort": "Process_P001",
+                "value": [
+                  {
+                    "idShort": "Status",
+                    "value": "Active"
+                  },
+                  {
+                    "idShort": "EstimatedDuration",
+                    "value": "120"
+                  },
+                  {
+                    "idShort": "Dependencies",
+                    "value": [
+                      "P000"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "extracted_data": {
+        "processes": [
+          {
+            "process_id": "P001",
+            "status": "Active",
+            "estimated_duration": 120,
+            "dependencies": [
+              "P000"
+            ]
+          }
+        ],
+        "active_processes": []
+      },
+      "timestamp": "2025-09-29T15:51:18.645680",
+      "source_endpoint": "/shells/ProcessPlanningAAS/submodels/ProcessDefinition/submodel/submodelElements"
+    }
+  },
+  "simulationInput": {
+    "input_file": "/tmp/factory_automation/enhanced_swrl_pipeline/enhanced_simulation_input_20250929_155118.json",
+    "simulation_data": {
+      "scenario": "enhanced_job_completion_prediction",
+      "goal": "predict_job_completion_time",
+      "parameters": {
+        "job_id": "J001",
+        "current_time": "2025-09-29T06:51:18Z",
+        "machine_status": "active",
+        "priority": "high",
+        "production_line": "Line1",
+        "target_quantity": "100"
+      },
+      "input_data": {
+        "jobs": [
+          {
+            "job_id": "J001",
+            "status": "Active",
+            "progress": 0.3,
+            "estimated_completion": "2025-09-29T18:00:00Z"
+          }
+        ],
+        "machines": [
+          {
+            "machine_id": "M1",
+            "status": "Operational",
+            "efficiency": 0.85,
+            "queue_length": 2
+          },
+          {
+            "machine_id": "M2",
+            "status": "Operational",
+            "efficiency": 0.92,
+            "queue_length": 1
+          }
+        ],
+        "processes": [
+          {
+            "process_id": "P001",
+            "status": "Active",
+            "estimated_duration": 120,
+            "dependencies": [
+              "P000"
+            ]
+          }
+        ]
+      },
+      "model_requirements": {
+        "container": "factory-nsga2:latest",
+        "expected_outputs": [
+          "predicted_completion_time",
+          "confidence",
+          "simulator_type"
+        ],
+        "execution_type": "kubernetes-job"
+      },
+      "metadata": {
+        "generated_at": "2025-09-29T15:51:18.645683",
+        "data_sources": [
+          "job_data",
+          "machine_data",
+          "process_plan"
+        ],
+        "aas_server": "http://127.0.0.1:5001",
+        "pipeline_version": "Enhanced-SWRL-v1.0"
+      }
+    },
+    "input_size": 1077,
+    "data_summary": {
+      "jobs_count": 1,
+      "machines_count": 2,
+      "processes_count": 1
+    }
+  },
+  "finalResult": {
+    "execution_method": "ExecutionAgent",
+    "execution_plan": [
+      {
+        "action_id": "docker_simulation",
+        "handler_type": "docker_run",
+        "parameters": {
+          "image": "factory-nsga2:latest",
+          "input_file": "/tmp/factory_automation/enhanced_swrl_pipeline/enhanced_simulation_input_20250929_155118.json",
+          "output_dir": "/tmp/factory_automation/enhanced_swrl_pipeline",
+          "scenario": "enhanced_job_completion_prediction"
+        },
+        "params": {
+          "job_id": "J001",
+          "current_time": "2025-09-29T06:51:18Z",
+          "machine_status": "active",
+          "priority": "high",
+          "production_line": "Line1",
+          "target_quantity": "100"
+        }
+      }
+    ],
+    "agent_result": {},
+    "execution_time": "2025-09-29T15:51:18.646312",
+    "success": true
+  },
+  "pipelineMetadata": {
+    "executionTime": "2025-09-29T15:51:18.646316",
+    "pipelineVersion": "Enhanced-SWRL-v1.0",
+    "aasServerUsed": "http://127.0.0.1:5001",
+    "stepsCompleted": [
+      "QueryGoal 입력",
+      "SWRL 추론 → 모델 선택",
+      "모델 메타데이터 확인",
+      "데이터 바인딩",
+      "실제 AAS 데이터 수집",
+      "입력 데이터 가공",
+      "ExecutionAgent를 통한 시뮬레이터 실행"
+    ]
+  }
+}
