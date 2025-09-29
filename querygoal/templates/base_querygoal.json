@@ -1,0 +1,20 @@
+{
+  "templateId": "base_querygoal",
+  "QueryGoal": {
+    "goalId": "{auto-generated}",
+    "goalType": "{dynamic}",
+    "parameters": [],
+    "outputSpec": [],
+    "metadata": {
+      "category": "{dynamic}",
+      "requiresModel": false,
+      "actionPlan": [],
+      "selectedModel": null,
+      "pipelineStages": [],
+      "notes": ""
+    },
+    "selectedModelRef": null,
+    "selectedModel": null,
+    "selectionProvenance": null
+  }
+}
