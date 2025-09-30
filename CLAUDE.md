@@ -42,16 +42,124 @@
 - 🔄 실제 데이터 수집 및 가공 모듈
 
 ## 📝 TODO: QueryGoal Runtime Executor 구현
+
+### ✅ 완료된 작업
 - ✅ QueryGoal Runtime Integration Plan 문서 분석 완료
 - ✅ QueryGoal Runtime Executor Implementation Plan 작성 완료
 - ✅ selectedModel 필드 접근 경로 수정 (metaDataFile, container.image 구조)
 - ✅ Goal3 outputSpec 매핑 수정 (estimatedTime, confidence, productionPlan, bottlenecks)
-- 📋 **Git에 저장 필요**: `docs/QueryGoal_Runtime_Executor_Implementation_Plan.md` 커밋하기
-- 🔄 **구현 우선순위**:
-  1. Phase 1: Core Infrastructure (QueryGoalExecutor, ExecutionContext)
-  2. Phase 2: Stage Handlers (SwrlSelectionHandler, YamlBindingHandler, SimulationHandler)
-  3. Phase 3: Common Runtime Components (AAS Client, Container Client)
-  4. Phase 4: Integration & Testing
+- ✅ Docker 명령어 환경변수 순서 수정 (이미지 이름 앞에 -e 플래그 배치)
+- ✅ Kubernetes 실행 경로 제거 (Docker-only, future expansion으로 표시)
+- ✅ Stage-Gate yamlBinding Required-flag filtering 적용
+- ✅ Manifest 스키마에 required 필드 추가 및 예제 작성
+- ✅ Manifest 키 이름 통일 (data_sources)
+- ✅ Stage-Gate error 상태 체크 추가 (status == "success")
+- ✅ Manifest combination_rules와 _apply_combination_rules 로직 정렬
+- ✅ **Runtime Executor 구현 완료 (Phase 1-3 모든 컴포넌트)**
+  - ✅ `querygoal/runtime/executor.py` - QueryGoalExecutor 오케스트레이터
+  - ✅ `querygoal/runtime/utils/stage_gate.py` - Stage-Gate Validator
+  - ✅ `querygoal/runtime/utils/work_directory.py` - Work Directory Manager
+  - ✅ `querygoal/runtime/utils/manifest_parser.py` - Manifest Parser
+  - ✅ `querygoal/runtime/handlers/base_handler.py` - Base Handler
+  - ✅ `querygoal/runtime/handlers/swrl_selection_handler.py` - SWRL Selection
+  - ✅ `querygoal/runtime/handlers/yaml_binding_handler.py` - YAML Binding with AAS
+  - ✅ `querygoal/runtime/handlers/simulation_handler.py` - Docker Simulation
+  - ✅ `querygoal/runtime/clients/aas_client.py` - AAS REST API Client
+  - ✅ `querygoal/runtime/clients/container_client.py` - Docker Container Client
+  - ✅ `querygoal/runtime/exceptions.py` - Runtime Exception Classes
+  - ✅ `test_runtime_executor.py` - 기본 통합 테스트
+
+### 📋 구현 우선순위 (4-Phase 8주 로드맵)
+
+#### Phase 1: 핵심 Runtime Executor (주 1-2) ✅ **완료**
+- [x] **Task 1.1**: QueryGoalExecutor 오케스트레이터 구현 (2일)
+  - `querygoal/runtime/executor.py` - 메인 실행 엔진
+  - ExecutionContext 데이터 클래스
+  - Stage-Gate 검증 로직
+
+- [x] **Task 1.2**: Base Handler 추상 클래스 (1일)
+  - `querygoal/runtime/handlers/base_handler.py`
+  - pre_execute/execute/post_execute 훅
+  - 공통 에러 처리
+
+- [x] **Task 1.3**: Stage-Gate Validator (1일)
+  - `querygoal/runtime/utils/stage_gate.py`
+  - 성공 기준 검증 로직
+  - Required-flag filtering 지원
+
+- [x] **Task 1.4**: Work Directory Manager (1일)
+  - `querygoal/runtime/utils/work_directory.py`
+  - Goal별 독립 작업 디렉터리 생성/관리
+
+#### Phase 2: Goal3 특화 Stage 핸들러 (주 3-4) ✅ **완료**
+- [x] **Task 2.1**: SwrlSelectionHandler 구현 (2일)
+  - `querygoal/runtime/handlers/swrl_selection_handler.py`
+  - 모델 메타데이터 로딩 (metaDataFile at top level)
+  - Manifest 경로 반환
+
+- [x] **Task 2.2**: YamlBindingHandler 구현 (3일)
+  - `querygoal/runtime/handlers/yaml_binding_handler.py`
+  - Manifest 파싱 (data_sources)
+  - Required/Optional 소스 구분 처리
+  - AAS 데이터 수집 (aas_property, aas_shell_collection)
+  - JSON 파일 생성 (machines.json, materials.json 등)
+
+- [x] **Task 2.3**: SimulationHandler 구현 (3일)
+  - `querygoal/runtime/handlers/simulation_handler.py`
+  - 컨테이너 이미지 접근 (container.image 구조)
+  - Docker 실행 (환경변수 올바른 순서)
+  - 시뮬레이션 결과 파싱
+  - Goal3 outputSpec 매핑 (estimatedTime, confidence, productionPlan, bottlenecks)
+
+#### Phase 3: 공통 Runtime 컴포넌트 (주 5-6) ✅ **완료**
+- [x] **Task 3.1**: AAS Client 구현 (2일)
+  - `querygoal/runtime/clients/aas_client.py`
+  - REST API 클라이언트 (httpx 기반)
+  - list_shells, get_shell, get_submodel_property
+
+- [x] **Task 3.2**: Container Client 구현 (2일)
+  - `querygoal/runtime/clients/container_client.py`
+  - Docker 실행 (asyncio 기반)
+  - 환경변수, 볼륨 마운트 처리
+  - 로그 수집 및 결과 파싱
+
+- [x] **Task 3.3**: Manifest Parser 구현 (1일)
+  - `querygoal/runtime/utils/manifest_parser.py`
+  - YAML manifest 파싱
+  - 스키마 검증
+
+- [x] **Task 3.4**: Exception Classes 정의 (1일)
+  - `querygoal/runtime/exceptions.py`
+  - RuntimeExecutionError, StageExecutionError 등
+
+#### Phase 4: API 통합 및 테스트 (주 7-8)
+- [ ] **Task 4.1**: API 엔드포인트 추가 (1일)
+  - `api/main.py` - POST /runtime/execute 엔드포인트
+  - QueryGoal 실행 요청 처리
+
+- [ ] **Task 4.2**: 통합 테스트 작성 (2일)
+  - Goal3 End-to-End 테스트
+  - Stage별 유닛 테스트
+  - Mock AAS 서버 테스트
+
+- [ ] **Task 4.3**: 문서화 및 예제 (1일)
+  - API 사용 가이드
+  - Manifest 작성 가이드
+  - 문제 해결 가이드
+
+- [ ] **Task 4.4**: 성능 최적화 및 리팩토링 (2일)
+  - 병렬 처리 최적화
+  - 에러 복구 메커니즘
+  - 로깅 개선
+
+### 🎯 구현 시 주의사항
+1. **selectedModel 필드 접근**: `metaDataFile` (최상위), `container.image` (중첩)
+2. **Manifest 키**: `data_sources` (snake_case) 사용
+3. **Required-flag filtering**: `required: true|false` 지원, 기본값 `true`
+4. **Stage-Gate 검증**: `status == "success"` 먼저 확인 후 성공률 검증
+5. **Docker 명령어**: 환경변수(-e) → 이미지 이름 순서
+6. **Kubernetes**: 현재 미지원, Docker-only 실행
+
 
 <!-- ### 현재 Goal 시나리오
 - 총 Goal1,2,3,4 가 존재 , 현재 Goal 1, 3, 4만 구현
