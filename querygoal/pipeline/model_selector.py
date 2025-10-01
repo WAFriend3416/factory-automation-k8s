@@ -109,7 +109,7 @@ class ModelSelector:
                 "purpose": "DeliveryPrediction",
                 "version": "1.0.0",
                 "container": "nsga2-optimizer:latest",
-                "metaDataFile": "nsga2_production_sources.yaml",
+                "metaDataFile": "NSGA2Model_sources.yaml",
                 "outputSchema": {
                     "estimatedTime": "number",
                     "confidence": "number",

@@ -145,24 +145,110 @@ class YamlBindingHandler(BaseHandler):
 
     async def _fetch_aas_shell_collection(self, source: Dict[str, Any]) -> List[Dict[str, Any]]:
         """AAS Shell 컬렉션에서 데이터 수집"""
-        shell_filter = source["config"].get("shell_filter", {})
-        combination_rules = source["config"].get("combination_rules", [])
+        config = source.get("config", {})
+        shell_filter = config.get("shell_filter", {})
+        combination_rules = config.get("combination_rules", [])
+        machine_sources = config.get("machine_sources", [])
 
         try:
-            shells = await self.aas_client.list_shells()
+            # Machines의 경우 machine_sources 사용
+            if machine_sources:
+                # machine_sources 기반 처리 (머신별 특화 submodel 사용)
+                combined_data = []
+                
+                for machine_source in machine_sources:
+                    machine_id = machine_source.get("machine_id")
+                    capability_submodel = machine_source.get("capability_submodel")
+                    status_submodel = machine_source.get("status_submodel")
+                    required_elements = machine_source.get("required_elements", {})
+                    
+                    # ✅ 기존 구현과 동일한 초기 구조
+                    machine_data = {
+                        "id": machine_id,  # 기존과 동일하게 'id' 사용
+                        "type": None,
+                        "status": "unknown",
+                        "capabilities": [],
+                        "efficiency": 1.0,
+                        "next_available_time": 0,  # ✅ 추가
+                        "queue_length": 0           # ✅ 추가
+                    }
+                    
+                    # ✅ shell_id 생성 (중요!)
+                    shell_id = f"urn:factory:machine:{machine_id}"
+                    
+                    # Capability 데이터 수집 - required_elements 기반
+                    if capability_submodel:
+                        capability_required = required_elements.get("capability", [])
+                        for element_name in capability_required:
+                            try:
+                                # ✅ shell_id를 키워드 인자로 전달 (중요!)
+                                value = await self.aas_client.get_submodel_property(
+                                    capability_submodel, element_name, shell_id=shell_id
+                                )
+                                
+                                if element_name == "machine_type" and value:
+                                    machine_data["type"] = value
+                                elif element_name == "efficiency" and value:
+                                    try:
+                                        machine_data["efficiency"] = float(value)
+                                    except:
+                                        pass
+                                elif element_name == "performable_operations" and value:
+                                    if isinstance(value, str):
+                                        machine_data["capabilities"] = [value]
+                                    else:
+                                        machine_data["capabilities"] = value
+                                        
+                            except Exception as e:
+                                self.logger.warning(f"Failed to get {element_name} for {machine_id}: {e}")
+                    
+                    # Status 데이터 수집 - required_elements 기반
+                    if status_submodel:
+                        status_required = required_elements.get("status", [])
+                        for element_name in status_required:
+                            try:
+                                # ✅ shell_id를 키워드 인자로 전달 (중요!)
+                                value = await self.aas_client.get_submodel_property(
+                                    status_submodel, element_name, shell_id=shell_id
+                                )
+                                
+                                if element_name == "status" and value:
+                                    machine_data["status"] = value
+                                elif element_name == "next_available_time" and value:
+                                    try:
+                                        machine_data["next_available_time"] = int(value)
+                                    except:
+                                        pass
+                                elif element_name == "queue_length" and value:
+                                    try:
+                                        machine_data["queue_length"] = int(value)
+                                    except:
+                                        pass
+                                        
+                            except Exception as e:
+                                self.logger.warning(f"Failed to get {element_name} for {machine_id}: {e}")
+                    
+                    combined_data.append(machine_data)
+                
+                self.logger.info(f"📦 Collected {len(combined_data)} machine records from machine_sources")
+                return combined_data
+                
+            else:
+                # 기존 combination_rules 기반 처리
+                shells = await self.aas_client.list_shells()
 
-            filtered_shells = []
-            for shell in shells:
-                if self._matches_shell_filter(shell, shell_filter):
-                    filtered_shells.append(shell)
+                filtered_shells = []
+                for shell in shells:
+                    if self._matches_shell_filter(shell, shell_filter):
+                        filtered_shells.append(shell)
 
-            combined_data = []
-            for shell in filtered_shells:
-                shell_data = await self._apply_combination_rules(shell, combination_rules)
-                combined_data.append(shell_data)
+                combined_data = []
+                for shell in filtered_shells:
+                    shell_data = await self._apply_combination_rules(shell, combination_rules)
+                    combined_data.append(shell_data)
 
-            self.logger.info(f"📦 Collected {len(combined_data)} records from {len(shells)} shells")
-            return combined_data
+                self.logger.info(f"📦 Collected {len(combined_data)} records from {len(shells)} shells")
+                return combined_data
 
         except Exception as e:
             raise AASConnectionError(f"Failed to fetch AAS shell collection: {e}") from e

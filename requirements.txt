@@ -6,3 +6,6 @@ rdflib
 pydantic
 Flask
 kubernetes
+httpx
+pyyaml
+# deepdiff - validation에서 사용 예정

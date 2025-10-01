@@ -23,7 +23,7 @@ def test_goal3():
     print()
     
     # API 엔드포인트
-    api_url = "http://127.0.0.1:8080/execute-goal"
+    api_url = "http://127.0.0.1:8000/execute-goal"
     
     # Goal 3 요청 데이터
     request_data = {
@@ -117,7 +117,7 @@ def main():
     else:
         print("❌ 테스트 실패!")
         print("🔧 시스템 상태를 확인해주세요:")
-        print("  1. FastAPI 서버 실행 상태 (http://127.0.0.1:8080)")
+        print("  1. FastAPI 서버 실행 상태 (http://127.0.0.1:8000)")
         print("  2. AAS 표준 서버 연결 상태")
         print("  3. Kubernetes 클러스터 상태")
         print("  4. PVC 마운트 상태")

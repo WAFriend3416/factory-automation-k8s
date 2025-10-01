@@ -4,7 +4,7 @@
       "modelId": "NSGA2SimulatorModel",
       "purpose": "DeliveryPrediction",
       "version": "1.0.0",
-      "metaDataFile": "NSGA2SimulatorMetaData.json",
+      "metaDataFile": "NSGA2Model_sources.yaml",
       "modelRef": "aas://ModelCatalog/NSGA2SimulatorModel@1.0.0",
       "description": "NSGA-II 기반 제조 스케줄 최적화 및 첫 번째 작업 완료 시간 예측 시뮬레이터",
       "capabilities": [

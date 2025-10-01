@@ -131,8 +131,15 @@ class SimulationHandler(BaseHandler):
         """시뮬레이션 출력 결과 파싱"""
 
         try:
-            # 시뮬레이션 출력 파일 찾기
-            output_files = ["simulation_output.json", "goal3_result.json", "result.json"]
+            # 시뮬레이션 출력 파일 찾기 (results 디렉터리 포함)
+            output_files = [
+                "results/simulator_optimization_result.json",
+                "simulator_optimization_result.json",
+                "results/goal3_result.json",
+                "simulation_output.json",
+                "goal3_result.json",
+                "result.json"
+            ]
 
             simulation_output = None
             for output_file in output_files:
@@ -140,20 +147,23 @@ class SimulationHandler(BaseHandler):
                 if output_path.exists():
                     with open(output_path, 'r', encoding='utf-8') as f:
                         simulation_output = json.load(f)
+                    self.logger.info(f"📄 Found simulation output: {output_file}")
                     break
 
             if simulation_output is None:
                 # 컨테이너 실행 결과에서 직접 추출
                 simulation_output = execution_result.get("output", {})
+                self.logger.warning("⚠️ No simulation output file found, using execution result")
 
             # Goal3 특화 결과 구조 확인
             if "goal3_data" in simulation_output:
                 goal3_data = simulation_output["goal3_data"]
                 return {
-                    "predicted_completion_time": goal3_data.get("predicted_completion_time"),
+                    "estimatedTime": goal3_data.get("predicted_completion_time"),
                     "confidence": goal3_data.get("confidence", 0.95),
                     "simulator_type": goal3_data.get("simulator_type", "NSGA-II"),
-                    "detailed_results": goal3_data.get("detailed_results", {}),
+                    "productionPlan": goal3_data.get("detailed_results", {}),
+                    "bottlenecks": goal3_data.get("bottlenecks", []),
                     "execution_metadata": simulation_output.get("execution_metadata", {})
                 }
             else:
@@ -173,18 +183,12 @@ class SimulationHandler(BaseHandler):
 
             # Goal3 outputSpec 매핑: estimatedTime, confidence, productionPlan, bottlenecks
             qg["outputs"].update({
-                # predicted_completion_time → estimatedTime
-                "estimatedTime": simulation_output.get("predicted_completion_time"),
-
-                # confidence는 동일
+                "estimatedTime": simulation_output.get("estimatedTime"),
                 "confidence": simulation_output.get("confidence"),
-
-                # detailed_results → productionPlan
-                "productionPlan": simulation_output.get("detailed_results", {}),
-
-                # bottlenecks 필드
-                "bottlenecks": simulation_output.get("bottlenecks",
-                                                   simulation_output.get("detailed_results", {}).get("bottlenecks", []))
+                "productionPlan": simulation_output.get("productionPlan", {}),
+                "bottlenecks": simulation_output.get("bottlenecks", []),
+                "simulator_type": simulation_output.get("simulator_type"),
+                "execution_metadata": simulation_output.get("execution_metadata", {})
             })
 
             self.logger.info("📤 QueryGoal outputs updated with Goal3 outputSpec mapping")

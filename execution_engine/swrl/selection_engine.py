@@ -263,6 +263,13 @@ class SelectionEngine:
                             model_metadata: Dict[str, Any],
                             provenance: Dict[str, Any]) -> Dict[str, Any]:
         """최종 응답 JSON 구성"""
+        
+        # metaDataFile이 NSGA2Model_sources.yaml인지 확인하고 필요시 변환
+        metadata_file = model_metadata.get("metaDataFile", "")
+        if "NSGA2" in model_metadata.get("modelId", "") and metadata_file != "NSGA2Model_sources.yaml":
+            # NSGA2 모델은 항상 통일된 파일명 사용
+            metadata_file = "NSGA2Model_sources.yaml"
+        
         # 원본 QueryGoal 복사
         result = json.loads(json.dumps(processed_goal))
 
@@ -270,7 +277,7 @@ class SelectionEngine:
         result["QueryGoal"]["selectedModelRef"] = model_metadata["modelRef"]
         result["QueryGoal"]["selectedModel"] = {
             "modelId": model_metadata["modelId"],
-            "MetaData": model_metadata["metaDataFile"],
+            "MetaData": metadata_file,  # 통일된 파일명 사용
             "outputs": [spec["name"] for spec in model_metadata.get("outputSchema", [])],
             "preconditions": {
                 "units.time": "s",
