@@ -80,8 +80,7 @@ docs/.doctrees/
 *.sqlite3
 
 # Serena MCP temporary files
-.serena/workspace/
-.serena/cache/
+.serena/
 
 # Docker
 docker-compose.override.yml
@@ -89,3 +88,7 @@ docker-compose.override.yml
 # OS
 Thumbs.db
 .DS_Store
+
+# AGENT
+CLAUDE.md
+AGENTS
