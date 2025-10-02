@@ -1,0 +1,93 @@
+{
+  "assetAdministrationShells": [
+    {
+      "idShort": "M3",
+      "id": "urn:factory:machine:M3",
+      "assetInformation": {
+        "assetKind": "Instance"
+      },
+      "submodels": [
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:factory:submodel:capability:M3"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:factory:submodel:status:M3"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "idShort": "Capability_M3",
+      "id": "urn:factory:submodel:capability:M3",
+      "submodelElements": [
+        {
+          "idShort": "machine_type",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": "VisionInspector"
+        },
+        {
+          "idShort": "performable_operations",
+          "modelType": "SubmodelElementList",
+          "typeValueListElement": "Property",
+          "value": [
+            {
+              "modelType": "Property",
+              "valueType": "xs:string",
+              "value": "testing"
+            }
+          ]
+        },
+        {
+          "idShort": "efficiency",
+          "modelType": "Property",
+          "valueType": "xs:double",
+          "value": "0.99"
+        }
+      ]
+    },
+    {
+      "idShort": "Status_M3",
+      "id": "urn:factory:submodel:status:M3",
+      "submodelElements": [
+        {
+          "idShort": "status",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": "idle"
+        },
+        {
+          "idShort": "next_available_time",
+          "modelType": "Property",
+          "valueType": "xs:integer",
+          "value": "0"
+        },
+        {
+          "idShort": "current_job",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": null
+        },
+        {
+          "idShort": "queue_length",
+          "modelType": "Property",
+          "valueType": "xs:integer",
+          "value": "0"
+        }
+      ]
+    }
+  ]
+}

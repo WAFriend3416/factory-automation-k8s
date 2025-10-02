@@ -1,0 +1,249 @@
+# NSGA-II Simulator Data Sources Configuration
+# Hybrid format supporting both 'sources' (legacy) and 'data_sources' (runtime)
+# Auto-generated and maintained by convert_manifest_formats.py
+
+model: NSGA2SimulatorModel
+description: SWRL 추론 결과 기반 NSGA-II 시뮬레이터 데이터 소스 매핑
+schema: 1
+
+# Server Configuration
+aasx_server:
+  access_method: direct_submodel_access
+  api_version: v3.0
+  base_url: http://127.0.0.1:5001
+  timeout: 30
+
+# Generation Information
+generation_info:
+  generated_by: SWRL inference engine
+  generation_timestamp: '2025-09-24T22:47:56.414175'
+  goal_id: Goal3
+  swrl_rules_applied:
+  - R001
+  - R002
+
+# NEW: Runtime-compatible data_sources format (for ManifestParser)
+data_sources:
+  - name: "JobOrders"
+    type: "aas_property"
+    required: true
+    config:
+      aasx_shell_id: "urn:factory:simulation:main"
+      submodel_id: "urn:factory:submodel:simulation_data"
+      property_path: "jobs_data"
+      element_id: "jobs_data"
+      output_file: "jobs.json"
+      transformation: "parse_jobs_data"
+      data_type: "json_string"
+      description: "작업 주문 정보 (job_id, part_id, operations)"
+      swrl_origin: "R002 rule expansion from FactorySimulation model"
+      
+  - name: "JobRelease"
+    type: "aas_property"
+    required: true
+    config:
+      aasx_shell_id: "urn:factory:simulation:main"
+      submodel_id: "urn:factory:submodel:simulation_data"
+      property_path: "job_release_data"
+      element_id: "job_release_data"
+      output_file: "job_release.json"
+      transformation: "parse_job_release_data"
+      data_type: "json_string"
+      description: "작업 릴리즈 시간 정보 (job_id, release_time)"
+      swrl_origin: "R002 rule expansion from FactorySimulation model"
+      
+  - name: "MachineTransferTime"
+    type: "aas_property"
+    required: true
+    config:
+      aasx_shell_id: "urn:factory:simulation:main"
+      submodel_id: "urn:factory:submodel:simulation_data"
+      property_path: "machine_transfer_time_data"
+      element_id: "machine_transfer_time_data"
+      output_file: "machine_transfer_time.json"
+      transformation: "parse_transfer_time_data"
+      data_type: "json_string"
+      description: "머신 간 이동 시간 매트릭스 (from_machine -> to_machine)"
+      swrl_origin: "R002 rule expansion from FactorySimulation model"
+      
+  - name: "Machines"
+    type: "aas_shell_collection"
+    required: false  # 선택적 소스 - 실패 허용
+    config:
+      data_type: "aggregated_machine_data"
+      description: "머신 capability와 status 통합 정보"
+      output_file: "machines.json"
+      swrl_origin: "R001 rule inference from MachineCapability + MachineStatus models"
+      transformation: "aggregate_machine_info"
+      shell_filter:
+        id_pattern: "M"
+      combination_rules:
+        - type: "submodel_property"
+          submodel_id: "urn:factory:submodel:capability"
+          property_path: "machine_type"
+          result_key: "capability"
+        - type: "submodel_property"
+          submodel_id: "urn:factory:submodel:status"
+          property_path: "status"
+          result_key: "status"
+      machine_sources:
+        - machine_id: "M1"
+          capability_submodel: "urn:factory:submodel:capability:M1"
+          status_submodel: "urn:factory:submodel:status:M1"
+          required_elements:
+            capability: ["machine_type", "efficiency"]
+            status: ["status", "next_available_time", "queue_length"]
+        - machine_id: "M2"
+          capability_submodel: "urn:factory:submodel:capability:M2"
+          status_submodel: "urn:factory:submodel:status:M2"
+          required_elements:
+            capability: ["machine_type", "efficiency"]
+            status: ["status", "next_available_time", "queue_length"]
+        - machine_id: "M3"
+          capability_submodel: "urn:factory:submodel:capability:M3"
+          status_submodel: "urn:factory:submodel:status:M3"
+          required_elements:
+            capability: ["machine_type", "efficiency"]
+            status: ["status", "next_available_time", "queue_length"]
+        - machine_id: "M4"
+          capability_submodel: "urn:factory:submodel:capability:M4"
+          status_submodel: "urn:factory:submodel:status:M4"
+          required_elements:
+            capability: ["machine_type", "efficiency"]
+            status: ["status", "next_available_time", "queue_length"]
+            
+  - name: "OperationDurations"
+    type: "aas_property"
+    required: true
+    config:
+      aasx_shell_id: "urn:factory:simulation:main"
+      submodel_id: "urn:factory:submodel:simulation_data"
+      property_path: "operation_durations_data"
+      element_id: "operation_durations_data"
+      output_file: "operation_durations.json"
+      transformation: "parse_duration_data"
+      data_type: "json_string"
+      description: "오퍼레이션 타입별 머신별 소요 시간 (distribution, mean, std)"
+      swrl_origin: "R002 rule expansion from FactorySimulation model"
+      
+  - name: "Operations"
+    type: "aas_property"
+    required: true
+    config:
+      aasx_shell_id: "urn:factory:simulation:main"
+      submodel_id: "urn:factory:submodel:simulation_data"
+      property_path: "operations_data"
+      element_id: "operations_data"
+      output_file: "operations.json"
+      transformation: "parse_operations_data"
+      data_type: "json_string"
+      description: "오퍼레이션 상세 정보 (operation_id, job_id, type, machines)"
+      swrl_origin: "R002 rule expansion from FactorySimulation model"
+
+# LEGACY: Original sources format (for aasx_data_orchestrator.py backward compatibility)
+sources:
+  JobOrders:
+    aasx_shell_id: urn:factory:simulation:main
+    data_type: json_string
+    description: 작업 주문 정보 (job_id, part_id, operations)
+    element_id: jobs_data
+    output_file: jobs.json
+    submodel_id: urn:factory:submodel:simulation_data
+    swrl_origin: R002 rule expansion from FactorySimulation model
+    transformation: parse_jobs_data
+  JobRelease:
+    aasx_shell_id: urn:factory:simulation:main
+    data_type: json_string
+    description: 작업 릴리즈 시간 정보 (job_id, release_time)
+    element_id: job_release_data
+    output_file: job_release.json
+    submodel_id: urn:factory:submodel:simulation_data
+    swrl_origin: R002 rule expansion from FactorySimulation model
+    transformation: parse_job_release_data
+  MachineTransferTime:
+    aasx_shell_id: urn:factory:simulation:main
+    data_type: json_string
+    description: 머신 간 이동 시간 매트릭스 (from_machine -> to_machine)
+    element_id: machine_transfer_time_data
+    output_file: machine_transfer_time.json
+    submodel_id: urn:factory:submodel:simulation_data
+    swrl_origin: R002 rule expansion from FactorySimulation model
+    transformation: parse_transfer_time_data
+  Machines:
+    data_type: aggregated_machine_data
+    description: 머신 capability와 status 통합 정보
+    machine_sources:
+    - capability_submodel: urn:factory:submodel:capability:M1
+      machine_id: M1
+      required_elements:
+        capability:
+        - machine_type
+        - efficiency
+        status:
+        - status
+        - next_available_time
+        - queue_length
+      status_submodel: urn:factory:submodel:status:M1
+    - capability_submodel: urn:factory:submodel:capability:M2
+      machine_id: M2
+      required_elements:
+        capability:
+        - machine_type
+        - efficiency
+        status:
+        - status
+        - next_available_time
+        - queue_length
+      status_submodel: urn:factory:submodel:status:M2
+    - capability_submodel: urn:factory:submodel:capability:M3
+      machine_id: M3
+      required_elements:
+        capability:
+        - machine_type
+        - efficiency
+        status:
+        - status
+        - next_available_time
+        - queue_length
+      status_submodel: urn:factory:submodel:status:M3
+    - capability_submodel: urn:factory:submodel:capability:M4
+      machine_id: M4
+      required_elements:
+        capability:
+        - machine_type
+        - efficiency
+        status:
+        - status
+        - next_available_time
+        - queue_length
+      status_submodel: urn:factory:submodel:status:M4
+    output_file: machines.json
+    swrl_origin: R001 rule inference from MachineCapability + MachineStatus models
+    transformation: aggregate_machine_info
+  OperationDurations:
+    aasx_shell_id: urn:factory:simulation:main
+    data_type: json_string
+    description: 오퍼레이션 타입별 머신별 소요 시간 (distribution, mean, std)
+    element_id: operation_durations_data
+    output_file: operation_durations.json
+    submodel_id: urn:factory:submodel:simulation_data
+    swrl_origin: R002 rule expansion from FactorySimulation model
+    transformation: parse_duration_data
+  Operations:
+    aasx_shell_id: urn:factory:simulation:main
+    data_type: json_string
+    description: 오퍼레이션 상세 정보 (operation_id, job_id, type, machines)
+    element_id: operations_data
+    output_file: operations.json
+    submodel_id: urn:factory:submodel:simulation_data
+    swrl_origin: R002 rule expansion from FactorySimulation model
+    transformation: parse_operations_data
+
+# Validation Rules
+validation_rules:
+  data_integrity:
+    property_value_validation: All source elements must be Property type with valid JSON strings
+    schema_validation: Generated JSON must comply with NSGA-II input schema
+  swrl_compliance:
+    R001_check: All required submodels must be accessible
+    R002_check: All 6 JSON files must be generatable from specified sources

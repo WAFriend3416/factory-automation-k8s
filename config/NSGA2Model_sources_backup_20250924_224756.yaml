@@ -1,0 +1,140 @@
+schema: 1
+model: "NSGA2SimulatorModel"
+description: "NSGA-II 시뮬레이터를 위한 데이터 소스 매핑"
+
+# AASX 서버 설정
+aasx_server:
+  base_url: "http://127.0.0.1:5001"
+  api_version: "v3.0"
+  timeout: 30
+
+# 6개 입력 파일에 대한 데이터 소스 매핑
+sources:
+  # 1. jobs.json - FactorySimulation의 jobs_data에서 추출
+  JobOrders:
+    aasx_shell_id: "urn:factory:simulation:main"
+    submodel_id: "urn:factory:submodel:simulation_data"
+    element_id: "jobs_data"
+    output_file: "jobs.json"
+    data_type: "json_string"
+    transformation: "parse_jobs_data"
+    description: "작업 주문 정보 (job_id, part_id, operations)"
+
+  # 2. operations.json - FactorySimulation의 operations_data에서 추출  
+  OperationDetails:
+    aasx_shell_id: "urn:factory:simulation:main"
+    submodel_id: "urn:factory:submodel:simulation_data"
+    element_id: "operations_data"
+    output_file: "operations.json"
+    data_type: "json_string"
+    transformation: "parse_operations_data"
+    description: "작업 세부사항 (operation_id, job_id, type, machines)"
+
+  # 3. operation_durations.json - FactorySimulation의 operation_durations_data에서 추출
+  ProcessDurations:
+    aasx_shell_id: "urn:factory:simulation:main"
+    submodel_id: "urn:factory:submodel:simulation_data"
+    element_id: "operation_durations_data"
+    output_file: "operation_durations.json"
+    data_type: "json_string"
+    transformation: "parse_durations_data"
+    description: "작업 지속시간 정보 (operation_type별 machine별 duration)"
+
+  # 4. machine_transfer_time.json - FactorySimulation의 machine_transfer_time_data에서 추출
+  TransferTimes:
+    aasx_shell_id: "urn:factory:simulation:main"
+    submodel_id: "urn:factory:submodel:simulation_data"
+    element_id: "machine_transfer_time_data"
+    output_file: "machine_transfer_time.json"
+    data_type: "json_string"
+    transformation: "parse_transfer_times"
+    description: "머신 간 이송시간 매트릭스"
+
+  # 5. job_release.json - FactorySimulation의 job_release_data에서 추출
+  JobReleaseSchedule:
+    aasx_shell_id: "urn:factory:simulation:main"
+    submodel_id: "urn:factory:submodel:simulation_data"
+    element_id: "job_release_data"
+    output_file: "job_release.json"
+    data_type: "json_string"
+    transformation: "parse_release_schedule"
+    description: "작업 릴리즈 스케줄"
+
+  # 6. machines.json - 개별 머신들(M1, M2, M3, M4)의 정보를 조합하여 생성
+  MachineStatus:
+    aasx_shell_ids:
+      - "urn:factory:machine:M1"
+      - "urn:factory:machine:M2"
+      - "urn:factory:machine:M3"
+      - "urn:factory:machine:M4"
+    submodel_pattern: "urn:factory:submodel:capability:{machine_id}"
+    status_pattern: "urn:factory:submodel:status:{machine_id}"
+    output_file: "machines.json"
+    data_type: "composite"
+    transformation: "compose_machines_data"
+    description: "머신 상태 및 능력 정보 조합"
+    fields:
+      - "machine_type"
+      - "performable_operations" 
+      - "efficiency"
+      - "status"
+      - "next_available_time"
+      - "queue_length"
+
+# 데이터 변환 함수 정의
+transformations:
+  parse_jobs_data:
+    description: "JSON 문자열을 jobs.json 형식으로 파싱"
+    input: "json_string"
+    output: "json_object"
+    
+  parse_operations_data:
+    description: "JSON 문자열을 operations.json 형식으로 파싱"
+    input: "json_string"
+    output: "json_object"
+    
+  parse_durations_data:
+    description: "JSON 문자열을 operation_durations.json 형식으로 파싱"
+    input: "json_string"
+    output: "json_object"
+    
+  parse_transfer_times:
+    description: "JSON 문자열을 machine_transfer_time.json 형식으로 파싱"
+    input: "json_string"
+    output: "json_object"
+    
+  parse_release_schedule:
+    description: "JSON 문자열을 job_release.json 형식으로 파싱"
+    input: "json_string"
+    output: "json_object"
+    
+  compose_machines_data:
+    description: "여러 머신의 개별 데이터를 하나의 machines.json으로 조합"
+    input: "multiple_aasx_shells"
+    output: "json_object"
+    logic: |
+      1. 각 머신별로 capability와 status 서브모델 접근
+      2. 필요 필드 추출 (type, operations, efficiency, status 등)
+      3. NSGA-II 요구 형식에 맞게 조합
+      4. machines.json 구조로 변환
+
+# API 엔드포인트 패턴
+api_endpoints:
+  get_shells: "/shells"
+  get_shell_by_id: "/shells/{shell_id}"
+  get_submodel: "/shells/{shell_id}/submodels/{submodel_id}"
+  get_submodel_element: "/shells/{shell_id}/submodels/{submodel_id}/submodel-elements/{element_id}"
+  get_submodel_element_value: "/shells/{shell_id}/submodels/{submodel_id}/submodel-elements/{element_id}/$value"
+
+# 오류 처리 및 재시도 설정
+error_handling:
+  max_retries: 3
+  retry_delay: 2
+  timeout: 30
+  fallback_strategy: "use_cached_data"
+
+# 캐시 설정
+cache:
+  enabled: true
+  ttl: 300  # 5분
+  directory: "temp/aasx_cache"

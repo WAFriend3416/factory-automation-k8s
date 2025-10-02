@@ -1,0 +1,98 @@
+# SPARQL Rules for Model Selection
+# 규칙 기반 모델 선택을 위한 SPARQL INSERT 쿼리들
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ex: <http://example.com/ontology#>
+
+# =====================================
+# Rule 1: Job Completion Time Prediction
+# =====================================
+# PRD 예시에서 가져온 기본 규칙:
+# IF goalType is 'predict_job_completion_time' AND Model purpose is 'DeliveryPrediction',
+# THEN CREATE a 'selectedModel' relationship
+
+INSERT {
+    ?goal ex:selectedModel ?model .
+}
+WHERE {
+    ?goal rdf:type ex:QueryGoal .
+    ?goal ex:goalType "predict_job_completion_time" .
+    ?model rdf:type ex:Model .
+    ?model ex:purpose "DeliveryPrediction" .
+}
+
+# =====================================
+# Rule 2: General Prediction Tasks
+# =====================================
+# 더 일반적인 예측 작업을 위한 추가 규칙
+
+INSERT {
+    ?goal ex:selectedModel ?model .
+}
+WHERE {
+    ?goal rdf:type ex:QueryGoal .
+    ?goal ex:goalType "predict_delivery_time" .
+    ?model rdf:type ex:Model .
+    ?model ex:purpose "DeliveryPrediction" .
+}
+
+# =====================================
+# Rule 3: Classification Tasks
+# =====================================
+# 분류 작업을 위한 규칙 예시
+
+INSERT {
+    ?goal ex:selectedModel ?model .
+}
+WHERE {
+    ?goal rdf:type ex:QueryGoal .
+    ?goal ex:goalType "classify_job_priority" .
+    ?model rdf:type ex:Model .
+    ?model ex:purpose "JobClassification" .
+}
+
+# =====================================
+# Rule 4: Anomaly Detection
+# =====================================
+# 이상 탐지를 위한 규칙 예시
+
+INSERT {
+    ?goal ex:selectedModel ?model .
+}
+WHERE {
+    ?goal rdf:type ex:QueryGoal .
+    ?goal ex:goalType "detect_job_anomaly" .
+    ?model rdf:type ex:Model .
+    ?model ex:purpose "AnomalyDetection" .
+}
+
+# =====================================
+# Rule 5: Optimization Tasks
+# =====================================
+# 최적화 작업을 위한 규칙 예시
+
+INSERT {
+    ?goal ex:selectedModel ?model .
+}
+WHERE {
+    ?goal rdf:type ex:QueryGoal .
+    ?goal ex:goalType "optimize_job_schedule" .
+    ?model rdf:type ex:Model .
+    ?model ex:purpose "ScheduleOptimization" .
+}
+
+# =====================================
+# Rule 6: Goal3 Production Time Prediction
+# =====================================
+# Goal3: 제품 생산 시간 예측을 위한 규칙
+
+INSERT {
+    ?goal ex:selectedModel ?model .
+}
+WHERE {
+    ?goal rdf:type ex:QueryGoal .
+    ?goal ex:goalType "goal3_predict_production_time" .
+    ?model rdf:type ex:Model .
+    ?model ex:purpose "production_time_prediction" .
+}

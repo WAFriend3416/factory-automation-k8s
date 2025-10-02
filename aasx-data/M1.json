@@ -1,0 +1,93 @@
+{
+  "assetAdministrationShells": [
+    {
+      "idShort": "M1",
+      "id": "urn:factory:machine:M1",
+      "assetInformation": {
+        "assetKind": "Instance"
+      },
+      "submodels": [
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:factory:submodel:capability:M1"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:factory:submodel:status:M1"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "idShort": "Capability_M1",
+      "id": "urn:factory:submodel:capability:M1",
+      "submodelElements": [
+        {
+          "idShort": "machine_type",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": "CNC"
+        },
+        {
+          "idShort": "performable_operations",
+          "modelType": "SubmodelElementList",
+          "typeValueListElement": "Property",
+          "value": [
+            {
+              "modelType": "Property",
+              "valueType": "xs:string",
+              "value": "drilling"
+            }
+          ]
+        },
+        {
+          "idShort": "efficiency",
+          "modelType": "Property",
+          "valueType": "xs:double",
+          "value": "0.95"
+        }
+      ]
+    },
+    {
+      "idShort": "Status_M1",
+      "id": "urn:factory:submodel:status:M1",
+      "submodelElements": [
+        {
+          "idShort": "status",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": "idle"
+        },
+        {
+          "idShort": "next_available_time",
+          "modelType": "Property",
+          "valueType": "xs:integer",
+          "value": "20"
+        },
+        {
+          "idShort": "current_job",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": null
+        },
+        {
+          "idShort": "queue_length",
+          "modelType": "Property",
+          "valueType": "xs:integer",
+          "value": "0"
+        }
+      ]
+    }
+  ]
+}

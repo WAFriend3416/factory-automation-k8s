@@ -1,0 +1,151 @@
+{
+  "templateId": "base_querygoal",
+  "QueryGoal": {
+    "goalId": "goal_20250929_212849_vj0p4",
+    "goalType": "goal1_query_cooling_failure",
+    "parameters": [
+      {
+        "key": "machineId",
+        "value": "M002",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "outputSpec": [
+      {
+        "name": "failureType",
+        "datatype": "string"
+      },
+      {
+        "name": "errorCode",
+        "datatype": "string"
+      },
+      {
+        "name": "machineStatus",
+        "datatype": "object"
+      },
+      {
+        "name": "recommendations",
+        "datatype": "array"
+      }
+    ],
+    "metadata": {
+      "category": "diagnostics",
+      "requiresModel": false,
+      "actionPlan": [
+        {
+          "actionId": "action_001",
+          "actionType": "ActionQueryAAS",
+          "description": "Query AAS for cooling failure data",
+          "parameters": {
+            "endpoint": "cooling/status"
+          }
+        },
+        {
+          "actionId": "action_002",
+          "actionType": "ActionFilterData",
+          "description": "Filter failure events",
+          "parameters": {
+            "filter": "status=failure"
+          }
+        },
+        {
+          "actionId": "action_003",
+          "actionType": "ActionAnalyzeDiagnostics",
+          "description": "Analyze diagnostic data",
+          "parameters": {
+            "mode": "cooling_diagnostics"
+          }
+        }
+      ],
+      "selectedModel": null,
+      "pipelineStages": [
+        "aasQuery",
+        "dataFiltering"
+      ],
+      "notes": "Created at 2025-09-29T21:28:49.633228 | Action plan resolved: 3 actions"
+    },
+    "selectedModelRef": null,
+    "selectedModel": null,
+    "selectionProvenance": null
+  },
+  "pipelineLog": {
+    "input": "Check cooling failure for machine M002",
+    "stages": [
+      {
+        "stage": "patternMatching",
+        "status": "completed",
+        "result": {
+          "goalType": "goal1_query_cooling_failure",
+          "metadata": {
+            "category": "diagnostics",
+            "requiresModel": false,
+            "pipelineStages": [
+              "aasQuery",
+              "dataFiltering"
+            ]
+          },
+          "extractedParameters": {
+            "machineId": "M002"
+          },
+          "originalInput": "Check cooling failure for machine M002"
+        }
+      },
+      {
+        "stage": "templateLoading",
+        "status": "completed",
+        "result": {
+          "goalId": "goal_20250929_212849_vj0p4"
+        }
+      },
+      {
+        "stage": "parameterFilling",
+        "status": "completed",
+        "result": {
+          "paramCount": 1
+        }
+      },
+      {
+        "stage": "actionPlanResolution",
+        "status": "completed",
+        "result": {
+          "actionCount": 3
+        }
+      },
+      {
+        "stage": "modelSelection",
+        "status": "completed",
+        "result": {
+          "modelStatus": "not_required"
+        }
+      },
+      {
+        "stage": "validation",
+        "status": "completed",
+        "result": {
+          "errorCount": 0,
+          "warningCount": 0,
+          "schemaValid": true,
+          "businessRulesValid": true,
+          "consistencyValid": true,
+          "completenessValid": true
+        }
+      }
+    ],
+    "timestamp": "2025-09-29T21:28:49.633152"
+  },
+  "validationResult": {
+    "isValid": true,
+    "errors": [],
+    "warnings": [],
+    "validatedAt": "2025-09-29T21:28:49.637421",
+    "summary": {
+      "errorCount": 0,
+      "warningCount": 0,
+      "schemaValid": true,
+      "businessRulesValid": true,
+      "consistencyValid": true,
+      "completenessValid": true
+    }
+  }
+}

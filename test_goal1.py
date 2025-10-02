@@ -1,75 +1,128 @@
 #!/usr/bin/env python3
 """
-Goal 1 테스트 스크립트
-실패한 냉각 Job 조회 기능을 테스트합니다.
+Goal 1 Test - Query Failed Jobs with Cooling Process
+특정 날짜에 cooling 프로세스에서 실패한 Job을 조회합니다.
 """
-
 import requests
 import json
 import sys
+from datetime import datetime
 
-def test_goal1():
-    """Goal 1: query_failed_jobs_with_cooling 테스트"""
+def test_goal1(date=None):
+    print("=" * 60)
+    print("🧪 Goal 1: Query Failed Jobs with Cooling Process")
+    print("=" * 60)
     
-    # API 엔드포인트
-    url = "http://127.0.0.1:8000/execute-goal"
+    # 날짜가 제공되지 않으면 기본값 사용
+    if date is None:
+        date = "2025-07-17"
     
-    # 테스트 데이터
+    # Kubernetes 환경에서 실행 중인 API 서버 주소 (포트 포워딩: 8080 -> 80)
+    url = "http://localhost:8080/execute-goal"
+    
+    # Goal 1 요청 데이터
     payload = {
         "goal": "query_failed_jobs_with_cooling",
-        "date": "2025-07-17"
+        "date": date
     }
     
-    print("🚀 Testing Goal 1: Query Failed Cooling Jobs")
-    print(f"📅 Date: {payload['date']}")
-    print("-" * 50)
+    print(f"\n📤 Request:")
+    print(json.dumps(payload, indent=2))
+    print(f"\n🔗 API Endpoint: {url}")
     
     try:
-        # API 호출
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
+        # API 요청 전송
+        print("\n⏳ Sending request to API server...")
+        response = requests.post(url, json=payload, timeout=30)
         
-        # 결과 파싱
-        result = response.json()
+        print(f"\n📥 Response Status: {response.status_code}")
         
-        print("✅ API Response received successfully!")
-        print("\n📊 Results:")
-        print(json.dumps(result, indent=2, ensure_ascii=False))
-        
-        # 결과 검증
-        if result.get("result"):
-            failed_jobs = result["result"]
-            print(f"\n📈 Found {len(failed_jobs)} failed cooling job(s):")
+        if response.status_code == 200:
+            result = response.json()
+            print("\n✅ SUCCESS! Failed jobs retrieved.")
+            print("\n📊 Full Response:")
+            print(json.dumps(result, indent=2, ensure_ascii=False))
             
-            for job in failed_jobs:
-                print(f"  - Job ID: {job['job_id']}")
-                print(f"    Date: {job['date']}")
-                print(f"    Status: {job['status']}")
-                print(f"    Process Steps: {', '.join(job['process_steps'])}")
-                print(f"    Failed At: {job.get('failed_at', 'N/A')}")
+            # 결과 파싱 및 표시
+            if "result" in result:
+                failed_jobs = result["result"]
                 
-            # 예상 결과 확인 (J-1002가 있어야 함)
-            expected_job_id = "J-1002"
-            if any(job['job_id'] == expected_job_id for job in failed_jobs):
-                print(f"\n✅ Test PASSED: Found expected job {expected_job_id}")
-                return True
-            else:
-                print(f"\n❌ Test FAILED: Expected job {expected_job_id} not found")
-                return False
-        else:
-            print("\n⚠️ No results returned")
-            return False
+                if isinstance(failed_jobs, list):
+                    print(f"\n📋 Found {len(failed_jobs)} failed job(s) on {date}:")
+                    
+                    for i, job in enumerate(failed_jobs, 1):
+                        print(f"\n  Job #{i}:")
+                        print(f"    • Job ID: {job.get('job_id', 'N/A')}")
+                        print(f"    • Date: {job.get('date', 'N/A')}")
+                        print(f"    • Status: {job.get('status', 'N/A')}")
+                        print(f"    • Process Steps: {', '.join(job.get('process_steps', []))}")
+                        print(f"    • Failed At: {job.get('failed_at', 'N/A')}")
+                    
+                    # 검증: J-1002가 포함되어 있는지 확인
+                    job_ids = [job.get('job_id') for job in failed_jobs]
+                    if 'J-1002' in job_ids:
+                        print("\n✅ Test PASSED: Found expected job J-1002")
+                    else:
+                        print("\n⚠️ Test WARNING: Expected job J-1002 not found")
+                        print(f"   Found jobs: {job_ids}")
+                        
+                elif failed_jobs == []:
+                    print(f"\n📭 No failed jobs found for date: {date}")
+                else:
+                    print(f"\n⚠️ Unexpected result format: {type(failed_jobs)}")
+                    print("Result:", failed_jobs)
             
+        elif response.status_code == 404:
+            print("\n❌ 404 Not Found - Goal not found in ontology")
+            print(f"Response: {response.json()}")
+            
+        elif response.status_code == 502:
+            print("\n❌ 502 Bad Gateway - AAS Server communication failed")
+            print(f"Response: {response.json()}")
+            print("\nTroubleshooting tips:")
+            print("  1. Check if AAS Mock server is running: kubectl get pods | grep aas-mock")
+            print("  2. Check port forwarding: lsof -i :5001")
+            
+        elif response.status_code == 500:
+            print("\n❌ 500 Internal Server Error")
+            print(f"Response: {response.json()}")
+            
+        else:
+            print(f"\n❌ Unexpected status code: {response.status_code}")
+            print(f"Response: {response.text}")
+            
+    except requests.exceptions.Timeout:
+        print("\n⏱️ Request timed out after 30 seconds")
+        print("The API server might be processing or there could be a network issue.")
+        
     except requests.exceptions.ConnectionError:
-        print("❌ Error: Could not connect to API server")
-        print("Make sure both servers are running:")
-        print("  1. Mock AAS Server: python aas_mock_server/server.py")
-        print("  2. FastAPI Server: uvicorn api.main:app --reload")
-        return False
+        print("\n❌ Connection Error: Could not connect to API server")
+        print("Please ensure:")
+        print("  1. API server is running in Kubernetes")
+        print("  2. Port forwarding is active: kubectl port-forward service/api-service 8080:80")
+        
     except Exception as e:
-        print(f"❌ Error: {e}")
-        return False
+        print(f"\n❌ Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+
+def main():
+    # 명령줄 인자로 날짜 받기 (선택사항)
+    if len(sys.argv) > 1:
+        date = sys.argv[1]
+        # 날짜 형식 검증
+        try:
+            datetime.strptime(date, "%Y-%m-%d")
+            print(f"Using custom date: {date}")
+        except ValueError:
+            print(f"⚠️ Invalid date format: {date}")
+            print("Using default date: 2025-07-17")
+            date = "2025-07-17"
+    else:
+        date = "2025-07-17"
+        print(f"Using default date: {date}")
+    
+    test_goal1(date)
 
 if __name__ == "__main__":
-    success = test_goal1()
-    sys.exit(0 if success else 1)
+    main()

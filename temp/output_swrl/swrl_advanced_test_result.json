@@ -1,0 +1,174 @@
+{
+  "test_timestamp": "2025-09-29T15:24:48.897898",
+  "test_type": "swrl_advanced_comprehensive",
+  "goal_type_tests": {
+    "Goal1_냉각실패": {
+      "goal_name": "Goal1_냉각실패",
+      "querygoal": {
+        "goal": "query_failed_work_order",
+        "goal_type": "query_cooling_failure",
+        "job_id": "JOB-COOLING-001",
+        "failure_type": "cooling",
+        "time_range": "2025-08-11T08:00:00Z/2025-08-11T20:00:00Z",
+        "aas_endpoint": "http://127.0.0.1:5001"
+      },
+      "action_plan_id": "goal1_cooling_failure",
+      "execution_steps": 2,
+      "steps": [
+        "fetch_job_log",
+        "filter_failure_data"
+      ],
+      "status": "success"
+    },
+    "Goal3_생산시간": {
+      "goal_name": "Goal3_생산시간",
+      "querygoal": {
+        "goal": "predict_first_completion_time",
+        "goal_type": "predict_production_time",
+        "product_type": "WidgetA",
+        "quantity": 100,
+        "production_line": "Line1",
+        "model_name": "JobETAModel",
+        "prediction_accuracy": 0.85,
+        "aas_endpoint": "http://127.0.0.1:5001"
+      },
+      "action_plan_id": "goal3_production_time",
+      "execution_steps": 5,
+      "steps": [
+        "select_prediction_model",
+        "ActionFetchProductSpec",
+        "ActionFetchAllMachineData",
+        "ActionAssembleSimulatorInputs",
+        "run_production_simulator"
+      ],
+      "status": "success"
+    },
+    "Goal4_제품추적": {
+      "goal_name": "Goal4_제품추적",
+      "querygoal": {
+        "goal": "track_product_position",
+        "goal_type": "track_product",
+        "product_id": "PRODUCT-ABC-123",
+        "tracking_mode": "real_time",
+        "location_precision": "high",
+        "aas_endpoint": "http://127.0.0.1:5001"
+      },
+      "action_plan_id": "goal4_product_tracking",
+      "execution_steps": 2,
+      "steps": [
+        "fetch_tracking_data",
+        "process_tracking_data"
+      ],
+      "status": "success"
+    }
+  },
+  "parameter_mapping_analysis": {
+    "execution_plan": [
+      {
+        "type": "ai_model_inference",
+        "action_id": "select_prediction_model",
+        "description": "Action: ex:ActionSelectModel",
+        "parameters": {},
+        "params": {
+          "goal": "predict_first_completion_time"
+        }
+      },
+      {
+        "type": "aas_query",
+        "action_id": "ActionFetchProductSpec",
+        "description": "Action: ex:ActionFetchProductSpec",
+        "parameters": {},
+        "params": {
+          "goal": "predict_first_completion_time"
+        }
+      },
+      {
+        "type": "aas_query_multiple",
+        "action_id": "ActionFetchAllMachineData",
+        "description": "Action: ex:ActionFetchAllMachineData",
+        "parameters": {},
+        "params": {
+          "goal": "predict_first_completion_time"
+        }
+      },
+      {
+        "type": "internal_processing",
+        "action_id": "ActionAssembleSimulatorInputs",
+        "description": "Action: ex:ActionAssembleSimulatorInputs",
+        "parameters": {},
+        "params": {
+          "goal": "predict_first_completion_time"
+        }
+      },
+      {
+        "type": "docker_run",
+        "action_id": "run_production_simulator",
+        "description": "Action: ex:ActionRunProductionSimulator",
+        "parameters": {},
+        "params": {
+          "goal": "predict_first_completion_time"
+        }
+      }
+    ],
+    "mapping_completeness": "complete"
+  },
+  "real_execution_test": {
+    "querygoal": {
+      "goal": "predict_first_completion_time",
+      "goal_type": "predict_production_time",
+      "product_type": "WidgetA",
+      "quantity": 100,
+      "production_line": "Line1"
+    },
+    "action_plan_id": "goal3_production_time",
+    "execution_plan": [
+      {
+        "type": "ai_model_inference",
+        "action_id": "select_prediction_model",
+        "description": "Action: ex:ActionSelectModel",
+        "parameters": {},
+        "params": {
+          "goal": "predict_first_completion_time"
+        }
+      },
+      {
+        "type": "aas_query",
+        "action_id": "ActionFetchProductSpec",
+        "description": "Action: ex:ActionFetchProductSpec",
+        "parameters": {},
+        "params": {
+          "goal": "predict_first_completion_time"
+        }
+      },
+      {
+        "type": "aas_query_multiple",
+        "action_id": "ActionFetchAllMachineData",
+        "description": "Action: ex:ActionFetchAllMachineData",
+        "parameters": {},
+        "params": {
+          "goal": "predict_first_completion_time"
+        }
+      },
+      {
+        "type": "internal_processing",
+        "action_id": "ActionAssembleSimulatorInputs",
+        "description": "Action: ex:ActionAssembleSimulatorInputs",
+        "parameters": {},
+        "params": {
+          "goal": "predict_first_completion_time"
+        }
+      },
+      {
+        "type": "docker_run",
+        "action_id": "run_production_simulator",
+        "description": "Action: ex:ActionRunProductionSimulator",
+        "parameters": {},
+        "params": {
+          "goal": "predict_first_completion_time"
+        }
+      }
+    ],
+    "test_status": "dry_run_success"
+  },
+  "overall_status": "success"
+}

@@ -1,0 +1,103 @@
+@prefix ex: <http://example.com/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.com/ontology> a owl:Ontology ;
+    rdfs:label "SWRL Model Selection Ontology" ;
+    rdfs:comment "RDF 온톨로지 for 규칙 기반 모델 선택 시스템" .
+
+ex:goalId a owl:DatatypeProperty ;
+    rdfs:label "goal ID" ;
+    rdfs:comment "QueryGoal의 고유 식별자" ;
+    rdfs:domain ex:QueryGoal ;
+    rdfs:range xsd:string .
+
+ex:goalType a owl:DatatypeProperty ;
+    rdfs:label "goal type" ;
+    rdfs:comment "QueryGoal의 유형 (예: predict_job_completion_time)" ;
+    rdfs:domain ex:QueryGoal ;
+    rdfs:range xsd:string .
+
+ex:hasOutputSpec a owl:ObjectProperty ;
+    rdfs:label "has output spec" ;
+    rdfs:comment "QueryGoal이 OutputSpec을 가지는 관계" ;
+    rdfs:domain ex:QueryGoal ;
+    rdfs:range ex:OutputSpec .
+
+ex:hasParameter a owl:ObjectProperty ;
+    rdfs:label "has parameter" ;
+    rdfs:comment "QueryGoal이 Parameter를 가지는 관계" ;
+    rdfs:domain ex:QueryGoal ;
+    rdfs:range ex:Parameter .
+
+ex:metaDataFile a owl:DatatypeProperty ;
+    rdfs:label "metadata file" ;
+    rdfs:comment "Model의 메타데이터 파일 경로" ;
+    rdfs:domain ex:Model ;
+    rdfs:range xsd:string .
+
+ex:modelId a owl:DatatypeProperty ;
+    rdfs:label "model ID" ;
+    rdfs:comment "Model의 고유 식별자" ;
+    rdfs:domain ex:Model ;
+    rdfs:range xsd:string .
+
+ex:outputDatatype a owl:DatatypeProperty ;
+    rdfs:label "output datatype" ;
+    rdfs:comment "OutputSpec의 데이터 타입" ;
+    rdfs:domain ex:OutputSpec ;
+    rdfs:range xsd:string .
+
+ex:outputName a owl:DatatypeProperty ;
+    rdfs:label "output name" ;
+    rdfs:comment "OutputSpec의 이름" ;
+    rdfs:domain ex:OutputSpec ;
+    rdfs:range xsd:string .
+
+ex:parameterKey a owl:DatatypeProperty ;
+    rdfs:label "parameter key" ;
+    rdfs:comment "Parameter의 키" ;
+    rdfs:domain ex:Parameter ;
+    rdfs:range xsd:string .
+
+ex:parameterValue a owl:DatatypeProperty ;
+    rdfs:label "parameter value" ;
+    rdfs:comment "Parameter의 값" ;
+    rdfs:domain ex:Parameter ;
+    rdfs:range xsd:string .
+
+ex:purpose a owl:DatatypeProperty ;
+    rdfs:label "purpose" ;
+    rdfs:comment "Model의 목적 (예: DeliveryPrediction)" ;
+    rdfs:domain ex:Model ;
+    rdfs:range xsd:string .
+
+ex:selectedModel a owl:ObjectProperty ;
+    rdfs:label "selected model" ;
+    rdfs:comment "QueryGoal과 선택된 Model 간의 관계" ;
+    rdfs:domain ex:QueryGoal ;
+    rdfs:range ex:Model .
+
+ex:version a owl:DatatypeProperty ;
+    rdfs:label "version" ;
+    rdfs:comment "Model의 버전" ;
+    rdfs:domain ex:Model ;
+    rdfs:range xsd:string .
+
+ex:OutputSpec a owl:Class ;
+    rdfs:label "Output Specification" ;
+    rdfs:comment "예상 출력 형식을 나타내는 클래스" .
+
+ex:Parameter a owl:Class ;
+    rdfs:label "Parameter" ;
+    rdfs:comment "QueryGoal의 매개변수를 나타내는 클래스" .
+
+ex:Model a owl:Class ;
+    rdfs:label "Model" ;
+    rdfs:comment "실행 가능한 AI 모델을 나타내는 클래스" .
+
+ex:QueryGoal a owl:Class ;
+    rdfs:label "Query Goal" ;
+    rdfs:comment "사용자의 목표 요청을 나타내는 클래스" .
+

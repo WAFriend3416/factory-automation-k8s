@@ -1,0 +1,69 @@
+{
+  "assetAdministrationShells": [
+    {
+      "idShort": "Factory",
+      "id": "urn:factory:asset:factory_common_data",
+      "assetInformation": {
+        "assetKind": "Instance"
+      },
+      "submodels": [
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:factory:submodel:process_specification:all"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:factory:submodel:job_log"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "idShort": "ProcessSpecification",
+      "id": "urn:factory:submodel:process_specification:all",
+      "submodelElements": [
+        {
+          "idShort": "P-1001",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": "{\"process_steps\": [{\"step\": 1, \"operation\": \"drilling\", \"required_machine_type\": \"M1\", \"std_duration_min\": 12}, {\"step\": 2, \"operation\": \"welding\", \"required_machine_type\": \"M2\", \"std_duration_min\": 8}]}"
+        },
+        {
+          "idShort": "P-2001",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": "{\"process_steps\": [{\"step\": 1, \"operation\": \"drilling\", \"required_machine_type\": \"M1\", \"std_duration_min\": 15}, {\"step\": 2, \"operation\": \"welding\", \"required_machine_type\": \"M2\", \"std_duration_min\": 10}]}"
+        },
+        {
+          "idShort": "P-3001",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": "{\"process_steps\": [{\"step\": 1, \"operation\": \"drilling\", \"required_machine_type\": \"M1\", \"std_duration_min\": 25}, {\"step\": 2, \"operation\": \"welding\", \"required_machine_type\": \"M2\", \"std_duration_min\": 10}, {\"step\": 3, \"operation\": \"testing\", \"required_machine_type\": \"M3\", \"std_duration_min\": 5}]}"
+        }
+      ]
+    },
+    {
+      "idShort": "JobLog",
+      "id": "urn:factory:submodel:job_log",
+      "submodelElements": [
+        {
+          "idShort": "Jobs",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": "[{\"job_id\": \"J-1001\", \"date\": \"2025-08-11\", \"status\": \"SUCCESS\", \"process_steps\": [\"drilling\", \"testing\"]}, {\"job_id\": \"J-1002\", \"date\": \"2025-08-11\", \"status\": \"FAILED\", \"process_steps\": [\"drilling\", \"testing\"], \"failed_at\": \"testing\"}, {\"job_id\": \"J-1003\", \"date\": \"2025-08-10\", \"status\": \"FAILED\", \"process_steps\": [\"drilling\"], \"failed_at\": \"drilling\"}, {\"job_id\": \"J-1004\", \"date\": \"2025-08-11\", \"status\": \"SUCCESS\", \"process_steps\": [\"drilling\", \"welding\"]}, {\"job_id\": \"J-1005\", \"date\": \"2025-08-11\", \"status\": \"FAILED\", \"process_steps\": [\"drilling\", \"welding\", \"testing\"], \"failed_at\": \"testing\"}, {\"job_id\": \"J-1006\", \"date\": \"2025-08-10\", \"status\": \"SUCCESS\", \"process_steps\": [\"testing\"]}]"
+        }
+      ]
+    }
+  ]
+}

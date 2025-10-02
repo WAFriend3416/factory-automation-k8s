@@ -1,0 +1,98 @@
+{
+  "assetAdministrationShells": [
+    {
+      "idShort": "M4",
+      "id": "urn:factory:machine:M4",
+      "assetInformation": {
+        "assetKind": "Instance"
+      },
+      "submodels": [
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:factory:submodel:capability:M4"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:factory:submodel:status:M4"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "idShort": "Capability_M4",
+      "id": "urn:factory:submodel:capability:M4",
+      "submodelElements": [
+        {
+          "idShort": "machine_type",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": "PaintingRobot"
+        },
+        {
+          "idShort": "performable_operations",
+          "modelType": "SubmodelElementList",
+          "typeValueListElement": "Property",
+          "value": [
+            {
+              "modelType": "Property",
+              "valueType": "xs:string",
+              "value": "welding"
+            },
+            {
+              "modelType": "Property",
+              "valueType": "xs:string",
+              "value": "testing"
+            }
+          ]
+        },
+        {
+          "idShort": "efficiency",
+          "modelType": "Property",
+          "valueType": "xs:double",
+          "value": "0.95"
+        }
+      ]
+    },
+    {
+      "idShort": "Status_M4",
+      "id": "urn:factory:submodel:status:M4",
+      "submodelElements": [
+        {
+          "idShort": "status",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": "idle"
+        },
+        {
+          "idShort": "next_available_time",
+          "modelType": "Property",
+          "valueType": "xs:integer",
+          "value": "23"
+        },
+        {
+          "idShort": "current_job",
+          "modelType": "Property",
+          "valueType": "xs:string",
+          "value": null
+        },
+        {
+          "idShort": "queue_length",
+          "modelType": "Property",
+          "valueType": "xs:integer",
+          "value": "1"
+        }
+      ]
+    }
+  ]
+}
