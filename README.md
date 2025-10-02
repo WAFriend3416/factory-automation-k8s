@@ -1,15 +1,30 @@
 # Factory Automation with QueryGoal System
 
-**현대화된 스마트 팩토리 자동화 시스템**: AAS (Asset Administration Shell) 통합, QueryGoal 파이프라인, NSGA-II 기반 시뮬레이션
+**차세대 스마트 팩토리 자동화 플랫폼**: 자연어 기반 쿼리 시스템, AAS (Asset Administration Shell) 통합, 온톨로지 기반 추론 엔진
 
-## 시스템 개요
+## 프로젝트 소개
 
-본 프로젝트는 두 가지 주요 실행 모드를 제공합니다:
+본 프로젝트는 **스마트 팩토리 운영을 위한 지능형 자동화 시스템**으로, 다음과 같은 핵심 목표를 달성합니다:
 
-1. **QueryGoal Pipeline/Runtime** (Goal 3) - 자연어 → 실행 가능한 쿼리 → 시뮬레이션 결과
-2. **Legacy Goal Execution** (Goal 1, 4) - 기존 온톨로지 기반 실행 엔진
+### 주요 목표 (Goals)
 
-> 📖 **작동 방식 상세**: QueryGoal의 E2E 흐름에 대한 자세한 설명은 [Goal3 E2E Flow Plan](docs/Goal3_E2E_Flow_Plan_Corrected.md)을 참조하세요.
+1. **Goal 1 - 작업 실패 분석**: 특정 공정(예: 냉각)에서 실패한 작업 조회 및 분석
+2. **Goal 2 - 이상 감지**: 설비 및 공정 이상 패턴 자동 탐지 (ML 모델 기반)
+3. **Goal 3 - 생산 시간 예측**: 제품별 생산 완료 시간 예측 및 최적화 (NSGA-II 시뮬레이션)
+4. **Goal 4 - 제품 추적**: 공장 내 제품 위치 실시간 추적
+
+### 시스템 진화 전략
+
+본 프로젝트는 **두 가지 실행 아키텍처**를 병행하며, 점진적으로 현대화된 QueryGoal 방식으로 전환합니다:
+
+| 아키텍처 | 설명 | 현재 상태 |
+|---------|------|----------|
+| **QueryGoal System** | 자연어 → Pipeline(6단계) → Runtime(3단계) → 실행 결과 | ✅ Goal 3 완전 구현 |
+| **Legacy System** | 온톨로지 기반 전통적 실행 엔진 | ✅ Goal 1, 4 작동 중 |
+
+> 🎯 **향후 계획**: Goal 1, 4는 현재 Legacy 방식으로 작동하지만, **QueryGoal 시스템으로 전환을 권장**합니다. QueryGoal은 자연어 입력, SPARQL 기반 모델 선택, 추적 가능한 실행 로그 등 현대적인 기능을 제공합니다.
+
+> 📖 **필독**: QueryGoal의 전체 E2E 흐름과 작동 원리는 **[Goal3 E2E Flow Plan](docs/Goal3_E2E_Flow_Plan_Corrected.md)** 문서를 반드시 참조하세요. 시스템 이해를 위한 핵심 문서입니다.
 
 ## 시스템 요구사항
 
@@ -57,14 +72,21 @@ python test_goal1.py
 python test_goal4.py
 ```
 
-## 주요 기능
+## 주요 기능 현황
 
-| Goal | 설명 | 상태 | 테스트 명령어 | 실행 방식 |
-|------|------|------|--------------|-----------|
-| **Goal 3** | **생산 시간 예측** | ✅ **완전 구현** | `python test_runtime_executor.py` | **QueryGoal Pipeline/Runtime** |
-| Goal 1 | 냉각 작업 실패 쿼리 | ✅ 작동 | `python test_goal1.py` | Legacy Ontology |
-| Goal 4 | 제품 위치 추적 | ✅ 작동 | `python test_goal4.py` | Legacy Ontology |
-| Goal 2 | 이상 감지 | ⏳ ML 모델 필요 | - | Legacy Ontology |
+| Goal | 설명 | 상태 | 테스트 명령어 | 실행 방식 | 비고 |
+|------|------|------|--------------|-----------|------|
+| **Goal 3** | **생산 시간 예측** | ✅ **완전 구현** | `python test_runtime_executor.py` | **QueryGoal Pipeline/Runtime** | **현대적 아키텍처** |
+| Goal 1 | 냉각 작업 실패 쿼리 | ✅ 작동 | `python test_goal1.py` | Legacy Ontology | ⚠️ QueryGoal 전환 권장 |
+| Goal 4 | 제품 위치 추적 | ✅ 작동 | `python test_goal4.py` | Legacy Ontology | ⚠️ QueryGoal 전환 권장 |
+| Goal 2 | 이상 감지 | ⏳ ML 모델 필요 | - | (미구현) | QueryGoal 방식 권장 |
+
+> 💡 **전환 권장 이유**:
+> - **자연어 입력 지원**: "Predict production time for product X quantity 50" 형태의 직관적 입력
+> - **SPARQL 기반 모델 선택**: 온톨로지를 통한 지능적 모델 매칭
+> - **추적성**: 모든 실행 단계가 `temp/runtime_executions/`에 기록
+> - **검증 체계**: Stage-Gate 패턴으로 각 단계 검증
+> - **확장성**: 새로운 Goal 추가가 템플릿 기반으로 간편
 
 ### Goal 3: QueryGoal 시스템 특징
 
@@ -92,8 +114,51 @@ Runtime (3 stages): swrlSelection → yamlBinding → simulation
 
 ## API Endpoints
 
-### POST `/execute-goal`
-Execute goal-based operations using ontology-driven workflow.
+FastAPI 기반 RESTful API를 통해 두 가지 실행 방식을 지원합니다.
+
+### 1. QueryGoal 시스템 (권장)
+
+#### POST `/querygoal/execute`
+자연어 기반 QueryGoal 실행 (Pipeline → Runtime → 결과)
+
+**Request:**
+```json
+{
+  "naturalLanguageInput": "Predict production time for product TEST_RUNTIME quantity 30"
+}
+```
+
+**Response:**
+```json
+{
+  "goalId": "qg_20250110_153045_abc123",
+  "goalType": "goal3_predict_production_time",
+  "status": "completed",
+  "outputs": {
+    "estimatedTime": 145.5,
+    "confidence": 0.92,
+    "productionPlan": [...],
+    "bottlenecks": [...]
+  },
+  "executionLog": {
+    "pipeline": {...},
+    "runtime": {...}
+  }
+}
+```
+
+**특징**:
+- 자연어 입력 자동 분석 (Pattern Matching)
+- SPARQL 기반 모델 자동 선택
+- 완전한 실행 추적성 (모든 단계 로그 기록)
+- Stage-Gate 검증으로 안정성 보장
+
+> 📖 **상세 흐름**: [Goal3 E2E Flow Plan](docs/Goal3_E2E_Flow_Plan_Corrected.md) 참조
+
+### 2. Legacy 시스템 (Goal 1, 4)
+
+#### POST `/execute-goal`
+온톨로지 기반 전통적 Goal 실행
 
 **Request:**
 ```json
@@ -104,9 +169,19 @@ Execute goal-based operations using ontology-driven workflow.
 ```
 
 **Supported Goals:**
-- `query_failed_jobs_with_cooling` - Query failed jobs with cooling process
-- `track_product_position` - Track product location in factory
-- `predict_first_completion_time` - Predict production completion time
+- `query_failed_jobs_with_cooling` - 냉각 공정 실패 작업 조회 (Goal 1)
+- `track_product_position` - 제품 위치 추적 (Goal 4)
+- `predict_first_completion_time` - 생산 시간 예측 (Goal 3 Legacy, ⚠️ QueryGoal 방식 권장)
+
+**Response:**
+```json
+{
+  "result": [...],
+  "execution_time": 0.234
+}
+```
+
+> ⚠️ **마이그레이션 권장**: 이 엔드포인트는 Legacy 지원 목적이며, 향후 `/querygoal/execute`로 통합될 예정입니다.
 
 ## 시스템 아키텍처
 
@@ -229,18 +304,6 @@ export AAS_SERVER_PORT=5001
 python test_runtime_executor.py
 ```
 
-### Legacy Goal 테스트 (Goal 1, 4)
-```bash
-# Goal 1: 냉각 작업 실패 쿼리
-USE_STANDARD_SERVER=true python test_goal1.py
-
-# Goal 4: 제품 위치 추적
-USE_STANDARD_SERVER=true python test_goal4.py
-```
-
-## Kubernetes 배포
-
-Kubernetes 배포 방법은 [COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)를 참조하세요.
 
 ## 문제 해결
 
@@ -290,9 +353,39 @@ Kubernetes 배포 방법은 [COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)�
    - Manifest YAML 파일 생성 (`config/`)
    - SPARQL 규칙에 모델 선택 로직 추가
 
-### 상세 개발 가이드
+## Kubernetes 배포
 
-[COMPLETE_SETUP_GUIDE.md](COMPLETE_SETUP_GUIDE.md)를 참조하세요.
+Kubernetes 매니페스트는 `k8s/` 디렉터리에 준비되어 있습니다.
+
+### 배포 방법
+```bash
+# Namespace 생성
+kubectl create namespace factory-automation
+
+# ConfigMap 및 Deployment 배포
+kubectl apply -f k8s/ -n factory-automation
+
+# 서비스 상태 확인
+kubectl get pods -n factory-automation
+kubectl get svc -n factory-automation
+
+# 로그 확인
+kubectl logs -f deployment/api-deployment -n factory-automation
+```
+
+### 서비스 접근
+```bash
+# 포트 포워딩으로 로컬 접근
+kubectl port-forward svc/api-service 8000:8000 -n factory-automation
+
+# API 테스트
+curl http://localhost:8000/docs
+```
+
+## 참고 문서
+
+- **[Goal3 E2E Flow Plan](docs/Goal3_E2E_Flow_Plan_Corrected.md)** ⭐ - QueryGoal 시스템의 전체 E2E 흐름 (필독)
+- **[CLAUDE.md](CLAUDE.md)** - 프로젝트 개발 가이드 및 주의사항
 
 ## License
 
