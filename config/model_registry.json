@@ -2,7 +2,7 @@
   "models": [
     {
       "modelId": "NSGA2SimulatorModel",
-      "purpose": "DeliveryPrediction",
+      "purpose": "production_time_prediction",
       "version": "1.0.0",
       "metaDataFile": "NSGA2Model_sources.yaml",
       "modelRef": "aas://ModelCatalog/NSGA2SimulatorModel@1.0.0",
@@ -38,7 +38,7 @@
     "lastUpdated": "2025-09-22T15:30:00Z",
     "totalModels": 1,
     "supportedPurposes": [
-      "DeliveryPrediction"
+      "production_time_prediction"
     ]
   }
 }

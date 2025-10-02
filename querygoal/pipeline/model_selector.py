@@ -176,7 +176,10 @@ class ModelSelector:
         # SelectionEngine이 사용 가능한 경우 우선 사용
         if self.selection_engine and querygoal_dict:
             try:
-                result = self.selection_engine.select_model(querygoal_dict)
+                # SelectionEngine은 parameter values를 string으로 요구하므로 변환
+                querygoal_for_engine = self._convert_params_to_strings(querygoal_dict)
+
+                result = self.selection_engine.select_model(querygoal_for_engine)
                 selected_model = result["QueryGoal"].get("selectedModel")
                 provenance = result["QueryGoal"].get("selectionProvenance", {})
 
@@ -206,6 +209,30 @@ class ModelSelector:
 
         # Fallback: 기존 방식으로 모델 선택
         return self._legacy_select_model(goal_type, parameters, constraints, purposes)
+
+    def _convert_params_to_strings(self, querygoal_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        SelectionEngine용으로 QueryGoal의 parameter values를 string으로 변환
+        원본은 보존하고 복사본을 수정하여 반환
+
+        Args:
+            querygoal_dict: 원본 QueryGoal 딕셔너리
+
+        Returns:
+            parameter values가 string으로 변환된 복사본
+        """
+        import copy
+        qg_copy = copy.deepcopy(querygoal_dict)
+
+        parameters = qg_copy["QueryGoal"].get("parameters", [])
+        for param in parameters:
+            value = param.get("value")
+            if value is not None:
+                param["value"] = str(value)
+            else:
+                param["value"] = ""
+
+        return qg_copy
 
     def _legacy_select_model(self,
                             goal_type: str,

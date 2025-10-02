@@ -81,3 +81,18 @@ WHERE {
     ?model rdf:type ex:Model .
     ?model ex:purpose "ScheduleOptimization" .
 }
+
+# =====================================
+# Rule 6: Goal3 Production Time Prediction
+# =====================================
+# Goal3: 제품 생산 시간 예측을 위한 규칙
+
+INSERT {
+    ?goal ex:selectedModel ?model .
+}
+WHERE {
+    ?goal rdf:type ex:QueryGoal .
+    ?goal ex:goalType "goal3_predict_production_time" .
+    ?model rdf:type ex:Model .
+    ?model ex:purpose "production_time_prediction" .
+}
