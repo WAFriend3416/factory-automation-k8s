@@ -46,17 +46,10 @@ cd scripts
 
 ### 2. API 서버 실행
 ```bash
-# 로컬 시뮬레이션 모드 (AAS 서버 불필요)
 export USE_STANDARD_SERVER=true
 export AAS_SERVER_IP=127.0.0.1
 export AAS_SERVER_PORT=5001
 export FORCE_LOCAL_MODE=true
-uvicorn api.main:app --reload --port 8000
-
-# 또는 표준 AAS 서버 연동 모드
-export USE_STANDARD_SERVER=true
-export AAS_SERVER_IP=221.139.184.184
-export AAS_SERVER_PORT=5001
 uvicorn api.main:app --reload --port 8000
 ```
 
@@ -210,7 +203,7 @@ FastAPI 기반 RESTful API를 통해 두 가지 실행 방식을 지원합니다
 
 ### Legacy 시스템 (Goal 1, 4)
 ```
-External AAS Server (localhost:5001 또는 221.139.184.184:5001)
+External AAS Server (localhost:5001)
            ↑
     FastAPI Service (port 8000)
            ↓
@@ -278,61 +271,6 @@ AAS_SERVER_IP=127.0.0.1          # AAS 서버 IP
 AAS_SERVER_PORT=5001             # AAS 서버 포트
 ```
 
-### 실행 모드
-
-1. **로컬 시뮬레이션 모드** (AAS 서버 불필요):
-   - `FORCE_LOCAL_MODE=true` 설정
-   - 하드코딩된 더미 데이터 사용
-   - 개발/테스트에 적합
-
-2. **표준 AAS 서버 모드**:
-   - 실제 AAS 서버에서 데이터 수집
-   - 프로덕션 환경에 적합
-
-## 테스트
-
-### QueryGoal E2E 테스트 (Goal 3)
-```bash
-# 로컬 모드
-export FORCE_LOCAL_MODE=true
-python test_runtime_executor.py
-
-# 표준 AAS 서버 모드
-export USE_STANDARD_SERVER=true
-export AAS_SERVER_IP=221.139.184.184
-export AAS_SERVER_PORT=5001
-python test_runtime_executor.py
-```
-
-
-## 문제 해결
-
-### Goal 3 관련
-
-**SelectionEngine 경고 발생**:
-- `rules.sparql`에 모델 선택 규칙이 정의되어 있는지 확인
-- `model_registry.json`의 `purpose` 필드가 SPARQL 규칙과 일치하는지 확인
-- 로그에서 "SelectionEngine failed" 메시지 확인
-
-**시뮬레이션 실패**:
-- Docker 이미지가 빌드되었는지 확인: `docker images | grep factory-nsga2`
-- 작업 디렉터리에 JSON 파일들이 생성되었는지 확인
-- 컨테이너 로그 확인: `temp/runtime_executions/{goal_id}/container_logs.txt`
-
-**파라미터 타입 오류**:
-- `parameter_filler.py`가 네이티브 타입을 유지하는지 확인
-- `model_selector.py`의 `_convert_params_to_strings()` 메서드 확인
-
-### Legacy Goal 관련
-
-**Connection Refused to localhost:5001**:
-- 외부 AAS 서버가 실행 중인지 확인
-- 방화벽 설정 확인
-- 포트 5001이 접근 가능한지 확인
-
-**Module Import Errors**:
-- 가상 환경이 활성화되었는지 확인
-- `pip install -r requirements.txt` 실행
 
 ## 개발 가이드
 
@@ -353,39 +291,9 @@ python test_runtime_executor.py
    - Manifest YAML 파일 생성 (`config/`)
    - SPARQL 규칙에 모델 선택 로직 추가
 
-## Kubernetes 배포
-
-Kubernetes 매니페스트는 `k8s/` 디렉터리에 준비되어 있습니다.
-
-### 배포 방법
-```bash
-# Namespace 생성
-kubectl create namespace factory-automation
-
-# ConfigMap 및 Deployment 배포
-kubectl apply -f k8s/ -n factory-automation
-
-# 서비스 상태 확인
-kubectl get pods -n factory-automation
-kubectl get svc -n factory-automation
-
-# 로그 확인
-kubectl logs -f deployment/api-deployment -n factory-automation
-```
-
-### 서비스 접근
-```bash
-# 포트 포워딩으로 로컬 접근
-kubectl port-forward svc/api-service 8000:8000 -n factory-automation
-
-# API 테스트
-curl http://localhost:8000/docs
-```
-
 ## 참고 문서
 
 - **[Goal3 E2E Flow Plan](docs/Goal3_E2E_Flow_Plan_Corrected.md)** ⭐ - QueryGoal 시스템의 전체 E2E 흐름 (필독)
-- **[CLAUDE.md](CLAUDE.md)** - 프로젝트 개발 가이드 및 주의사항
 
 ## License
 
