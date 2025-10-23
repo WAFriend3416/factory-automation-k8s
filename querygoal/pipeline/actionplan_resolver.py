@@ -23,9 +23,9 @@ class ActionPlanResolver:
         if ontology_path:
             self.ontology_path = Path(ontology_path)
         else:
-            # 기본 경로 - 백업 폴더의 온톨로지 사용
-            base_dir = Path(__file__).parent.parent.parent.parent
-            self.ontology_path = base_dir / "factory-automation-k8s-backup" / "ontology" / "factory_ontology_v2_final_corrected.ttl"
+            # 기본 경로 - 현재 프로젝트의 온톨로지 사용
+            base_dir = Path(__file__).parent.parent.parent
+            self.ontology_path = base_dir / "ontology" / "factory_ontology_v2_final_corrected.ttl"
 
         # 네임스페이스 정의
         self.FACTORY = Namespace("http://www.example.org/factory-automation#")

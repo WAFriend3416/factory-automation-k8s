@@ -1,0 +1,194 @@
+{
+  "templateId": "base_querygoal",
+  "QueryGoal": {
+    "goalId": "goal_20251020_234649_bp5lm",
+    "goalType": "goal3_predict_production_time",
+    "parameters": [
+      {
+        "key": "productType",
+        "value": "ion",
+        "type": "string",
+        "required": true
+      },
+      {
+        "key": "quantity",
+        "value": 30,
+        "type": "number",
+        "required": true
+      }
+    ],
+    "outputSpec": [
+      {
+        "name": "estimatedTime",
+        "datatype": "number"
+      },
+      {
+        "name": "confidence",
+        "datatype": "number"
+      },
+      {
+        "name": "productionPlan",
+        "datatype": "object"
+      },
+      {
+        "name": "bottlenecks",
+        "datatype": "array"
+      }
+    ],
+    "metadata": {
+      "category": "prediction",
+      "requiresModel": true,
+      "actionPlan": [
+        {
+          "actionId": "action_101",
+          "actionType": "ActionSelectModel",
+          "description": "Select SWRL prediction model",
+          "parameters": {
+            "modelType": "production_time"
+          }
+        },
+        {
+          "actionId": "action_102",
+          "actionType": "ActionBindData",
+          "description": "Bind YAML data sources",
+          "parameters": {
+            "dataSource": "production_data.yaml"
+          }
+        },
+        {
+          "actionId": "action_103",
+          "actionType": "ActionRunProductionSimulator",
+          "description": "Run production simulation",
+          "parameters": {
+            "simulationType": "time_estimation"
+          }
+        },
+        {
+          "actionId": "action_104",
+          "actionType": "ActionProcessResults",
+          "description": "Process simulation results",
+          "parameters": {
+            "outputFormat": "json"
+          }
+        }
+      ],
+      "selectedModel": {
+        "modelId": "NSGA2SimulatorModel",
+        "name": "NSGA2SimulatorModel",
+        "version": "1.0.0"
+      },
+      "pipelineStages": [
+        "swrlSelection",
+        "yamlBinding",
+        "simulation"
+      ],
+      "notes": "Created at 2025-10-20T23:46:49.036041 | Action plan resolved: 4 actions | Model selected: NSGA2SimulatorModel"
+    },
+    "selectedModelRef": "NSGA2SimulatorModel",
+    "selectedModel": {
+      "modelId": "NSGA2SimulatorModel",
+      "purpose": "production_time_prediction",
+      "version": "1.0.0",
+      "container": {
+        "image": "factory-nsga2:latest",
+        "digest": "sha256:...",
+        "executionType": "kubernetes-job"
+      },
+      "metaDataFile": "NSGA2Model_sources.yaml"
+    },
+    "selectionProvenance": {
+      "selectedAt": "2025-10-20T14:46:49Z",
+      "selectionMethod": "SPARQL-based-rules",
+      "engine": "Rule-based Module (SPARQL)",
+      "ruleName": "SWRL:Goal2NSGA2SimulatorModel",
+      "evidence": {
+        "matched": [
+          "goalType==goal3_predict_production_time",
+          "purpose==production_time_prediction"
+        ]
+      },
+      "reason": "Selected by SPARQL rules for goal3_predict_production_time"
+    }
+  },
+  "pipelineLog": {
+    "input": "Predict production time for product TEST_RUNTIME quantity 30",
+    "stages": [
+      {
+        "stage": "patternMatching",
+        "status": "completed",
+        "result": {
+          "goalType": "goal3_predict_production_time",
+          "metadata": {
+            "category": "prediction",
+            "requiresModel": true,
+            "pipelineStages": [
+              "swrlSelection",
+              "yamlBinding",
+              "simulation"
+            ]
+          },
+          "extractedParameters": {
+            "productType": "ion",
+            "quantity": 30
+          },
+          "originalInput": "Predict production time for product TEST_RUNTIME quantity 30"
+        }
+      },
+      {
+        "stage": "templateLoading",
+        "status": "completed",
+        "result": {
+          "goalId": "goal_20251020_234649_bp5lm"
+        }
+      },
+      {
+        "stage": "parameterFilling",
+        "status": "completed",
+        "result": {
+          "paramCount": 2
+        }
+      },
+      {
+        "stage": "actionPlanResolution",
+        "status": "completed",
+        "result": {
+          "actionCount": 4
+        }
+      },
+      {
+        "stage": "modelSelection",
+        "status": "completed",
+        "result": {
+          "modelStatus": "selected"
+        }
+      },
+      {
+        "stage": "validation",
+        "status": "completed",
+        "result": {
+          "errorCount": 0,
+          "warningCount": 0,
+          "schemaValid": true,
+          "businessRulesValid": true,
+          "consistencyValid": true,
+          "completenessValid": true
+        }
+      }
+    ],
+    "timestamp": "2025-10-20T23:46:49.035514"
+  },
+  "validationResult": {
+    "isValid": true,
+    "errors": [],
+    "warnings": [],
+    "validatedAt": "2025-10-20T23:46:49.144753",
+    "summary": {
+      "errorCount": 0,
+      "warningCount": 0,
+      "schemaValid": true,
+      "businessRulesValid": true,
+      "consistencyValid": true,
+      "completenessValid": true
+    }
+  }
+}

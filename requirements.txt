@@ -8,4 +8,5 @@ Flask
 kubernetes
 httpx
 pyyaml
+apache-airflow
 # deepdiff - validation에서 사용 예정

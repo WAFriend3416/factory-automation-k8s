@@ -1,0 +1,38 @@
+[
+  {
+    "id": "M1",
+    "type": "CNC",
+    "status": "idle",
+    "capabilities": [],
+    "efficiency": 0.95,
+    "next_available_time": 20,
+    "queue_length": 0
+  },
+  {
+    "id": "M2",
+    "type": "WeldingRobot",
+    "status": "idle",
+    "capabilities": [],
+    "efficiency": 0.98,
+    "next_available_time": 3,
+    "queue_length": 0
+  },
+  {
+    "id": "M3",
+    "type": "VisionInspector",
+    "status": "idle",
+    "capabilities": [],
+    "efficiency": 0.99,
+    "next_available_time": 0,
+    "queue_length": 0
+  },
+  {
+    "id": "M4",
+    "type": "PaintingRobot",
+    "status": "idle",
+    "capabilities": [],
+    "efficiency": 0.95,
+    "next_available_time": 23,
+    "queue_length": 1
+  }
+]
